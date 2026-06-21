@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "jsx": "react-native",
+    "lib": ["esnext", "dom"],
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "baseUrl": ".",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "paths": {
+      "@sincpro/mobile-odoo": ["./sincpro_mobile_odoo/index.ts"],
+      "@sincpro/mobile-odoo/*": ["./sincpro_mobile_odoo/*"]
+    }
+  },
+  "include": ["sincpro_mobile_odoo/**/*.ts", "sincpro_mobile_odoo/**/*.tsx"],
+  "exclude": ["node_modules", "lib"]
+}

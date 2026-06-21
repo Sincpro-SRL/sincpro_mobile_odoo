@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly": false,
+    "outDir": "./dist",
+    "rootDir": "./sincpro_mobile_odoo",
+    "jsx": "react-jsx",
+    "jsxImportSource": "nativewind",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "sourceMap": false,
+    "declarationMap": false
+  },
+  "include": ["sincpro_mobile_odoo/**/*.ts", "sincpro_mobile_odoo/**/*.tsx"],
+  "exclude": ["node_modules", "dist", "**/__tests__", "**/*.test.*"]
+}

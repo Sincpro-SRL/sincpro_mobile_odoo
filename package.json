@@ -1,0 +1,86 @@
+{
+  "name": "@sincpro/mobile-odoo",
+  "version": "0.1.0",
+  "description": "Integración Odoo opcional para el framework Sincpro Mobile: OdooClient, auth, servidor y res.partner reusables",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "keywords": [
+    "react-native",
+    "expo",
+    "odoo",
+    "sincpro",
+    "framework"
+  ],
+  "repository": "https://github.com/Sincpro-SRL/sincpro_mobile_odoo",
+  "author": "Gutierrez, Andres <andres.gutierrez@sincpro.com.bo>",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.11.0"
+  },
+  "peerDependencies": {
+    "expo-intent-launcher": "*",
+    "nativewind": ">=4",
+    "react": "*",
+    "react-hook-form": ">=7",
+    "react-native": "*",
+    "react-native-toast-message": "*",
+    "react-native-webview": "*",
+    "react-router-native": ">=6",
+    "@sincpro/mobile": ">=0.1.0",
+    "@sincpro/mobile-ui": ">=0.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "~19.1.10",
+    "clsx": "^2.1.1",
+    "eslint": "^9.35.0",
+    "eslint-config-expo": "~10.0.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "eslint-plugin-react": "^7.37.2",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "expo-intent-launcher": "~13.0.8",
+    "nativewind": "^4.0.1",
+    "prettier": "^3.6.2",
+    "react": "19.1.0",
+    "react-hook-form": "^7.62.0",
+    "react-native": "0.81.5",
+    "react-native-toast-message": "^2.3.3",
+    "react-native-webview": "13.15.0",
+    "react-router-native": "^6.30.0",
+    "tailwind-merge": "^3.4.0",
+    "tailwind-variants": "^3.2.2",
+    "tsc-alias": "^1.8.17",
+    "typescript": "~5.9.2",
+    "@sincpro/mobile": "0.1.0",
+    "@sincpro/mobile-ui": "file:../sincpro_mobile_ui"
+  },
+  "exports": {
+    ".": "./dist/index.js",
+    "./domain/auth": "./dist/domain/auth/index.js",
+    "./entrypoints/cron": "./dist/entrypoints/cron/index.js",
+    "./entrypoints/queue": "./dist/entrypoints/queue/index.js",
+    "./entrypoints/ui": "./dist/entrypoints/ui/index.js",
+    "./ui/components": "./dist/ui/components/index.js",
+    "./ui/components/atoms": "./dist/ui/components/atoms/index.js",
+    "./ui/components/molecules": "./dist/ui/components/molecules/index.js",
+    "./ui/components/organisms": "./dist/ui/components/organisms/index.js",
+    "./ui/components/templates": "./dist/ui/components/templates/index.js",
+    "./ui/screens": "./dist/ui/screens/index.js",
+    "./ui/screens/login": "./dist/ui/screens/login/index.js",
+    "./ui/screens/odoo_portal": "./dist/ui/screens/odoo_portal/index.js",
+    "./ui/screens/profile": "./dist/ui/screens/profile/index.js",
+    "./ui/screens/reset_account": "./dist/ui/screens/reset_account/index.js",
+    "./ui/screens/server": "./dist/ui/screens/server/index.js",
+    "./ui/screens/settings": "./dist/ui/screens/settings/index.js",
+    "./*": "./dist/*.js",
+    "./package.json": "./package.json"
+  }
+}
