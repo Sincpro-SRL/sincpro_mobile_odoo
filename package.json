@@ -35,7 +35,7 @@
     "react-native-webview": "*",
     "react-router-native": ">=6",
     "@sincpro/mobile": ">=0.1.0",
-    "@sincpro/mobile-ui": ">=0.1.0"
+    "@sincpro/mobile-ui": ">=0.2.0"
   },
   "devDependencies": {
     "@types/react": "~19.1.10",
@@ -60,7 +60,7 @@
     "tsc-alias": "^1.8.17",
     "typescript": "~5.9.2",
     "@sincpro/mobile": "0.1.0",
-    "@sincpro/mobile-ui": "file:../sincpro_mobile_ui"
+    "@sincpro/mobile-ui": "0.2.0"
   },
   "exports": {
     ".": "./dist/index.js",
