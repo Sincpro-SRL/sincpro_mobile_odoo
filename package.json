@@ -59,8 +59,8 @@
     "tailwind-variants": "^3.2.2",
     "tsc-alias": "^1.8.17",
     "typescript": "~5.9.2",
-    "@sincpro/mobile": "0.1.0",
-    "@sincpro/mobile-ui": "0.2.0"
+    "@sincpro/mobile": "0.1.1",
+    "@sincpro/mobile-ui": "0.2.1"
   },
   "exports": {
     ".": "./dist/index.js",
