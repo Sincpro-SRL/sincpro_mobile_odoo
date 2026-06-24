@@ -62,6 +62,7 @@ function ServerConfigForm({ onSubmit, serverParams }: ServerConfigFormProps) {
       <Button
         onPress={form.handleSubmit(onSubmit)}
         title={"Guardar configuración"}
+        variant="cta"
       />
     </View>
   );

@@ -1,3 +1,4 @@
+import { useNavigation } from "@react-navigation/native";
 import { OdooScreen } from "@sincpro/mobile-odoo/entrypoints/ui/AppScreen";
 import { useOdoo } from "@sincpro/mobile-odoo/entrypoints/ui/context";
 import { useConfirmationContext } from "@sincpro/mobile-ui/Dialog/Confirmation.context";
@@ -9,7 +10,6 @@ import {
   useMemo,
   useState,
 } from "react";
-import { useNavigate } from "react-router-native";
 
 interface IProfileContext {
   session: ReturnType<typeof useOdoo>["session"];
@@ -32,9 +32,9 @@ interface ProfileProviderProps {
 
 export function ProfileProvider({
   children,
-  mainRoute = "/",
+  mainRoute = "Main",
 }: ProfileProviderProps) {
-  const navigate = useNavigate();
+  const navigation = useNavigation();
   const { show, hide } = useConfirmationContext();
   const { session, authIsLoading, logout } = useOdoo();
   const [debugMode, setDebugMode] = useState(false);
@@ -53,27 +53,27 @@ export function ProfileProvider({
       onConfirm: async () => {
         hide();
         await logout();
-        navigate(OdooScreen.LOGIN);
+        // conditional rendering in the host app handles switching to Login automatically
       },
       onCancel: () => hide(),
     });
-  }, [show, hide, logout, navigate]);
+  }, [show, hide, logout, navigation]);
 
   const handleSettings = useCallback(() => {
-    navigate(OdooScreen.SETTINGS);
-  }, [navigate]);
+    navigation.navigate(OdooScreen.SETTINGS as never);
+  }, [navigation]);
 
   const handleDatabase = useCallback(() => {
-    navigate(OdooScreen.DATABASE_LIST);
-  }, [navigate]);
+    navigation.navigate(OdooScreen.DATABASE_LIST as never);
+  }, [navigation]);
 
   const handleAssignedEquipment = useCallback(() => {
-    console.log("Navigate to assigned equipment");
+    // equipment navigation not yet implemented
   }, []);
 
   const handleBack = useCallback(() => {
-    navigate(mainRoute);
-  }, [navigate, mainRoute]);
+    navigation.navigate(mainRoute as never);
+  }, [navigation, mainRoute]);
 
   const value = useMemo<IProfileContext>(
     () => ({

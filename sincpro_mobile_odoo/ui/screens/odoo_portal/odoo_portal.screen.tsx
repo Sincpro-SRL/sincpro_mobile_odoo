@@ -1,12 +1,11 @@
 import { WebViewAdapter } from "@sincpro/mobile/adapters/webview.adapter";
 import { WebViewMessageReceivedEvent } from "@sincpro/mobile/domain/webview/events";
 import { loggerUseCases } from "@sincpro/mobile/infrastructure/logger";
-import { UI_NOTIFICATION_EVENT } from "@sincpro/mobile/infrastructure/ui/events";
 import { UIEventBus } from "@sincpro/mobile/infrastructure/ui/UIEventBus";
 import { EventBus } from "@sincpro/mobile/infrastructure/workers";
 import { InjectableWebView } from "@sincpro/mobile/ui/components/organisms";
 import { useOdoo } from "@sincpro/mobile-odoo/entrypoints/ui/context";
-import { Typography } from "@sincpro/mobile-ui/Typography";
+import { Feedback, useToast } from "@sincpro/mobile-ui/Feedback";
 import { FormViewV2 } from "@sincpro/mobile-ui/views/FormViewV2";
 import { useEffect, useState } from "react";
 import { View } from "react-native";
@@ -14,6 +13,7 @@ import { WebViewMessageEvent } from "react-native-webview";
 
 export function OdooPortalScreen() {
   const { serverParams } = useOdoo();
+  const toast = useToast();
   const [hardRefreshKey, setHardRefreshKey] = useState(0);
 
   useEffect(() => {
@@ -28,9 +28,10 @@ export function OdooPortalScreen() {
         <FormViewV2.Content>
           <FormViewV2.Content.Groups>
             <FormViewV2.Content.Group>
-              <Typography.Text className="text-gray-600">
-                No hay servidor configurado. Por favor, inicia sesión primero.
-              </Typography.Text>
+              <Feedback.EmptyState
+                description="Por favor, inicia sesión primero."
+                title="No hay servidor configurado"
+              />
             </FormViewV2.Content.Group>
           </FormViewV2.Content.Groups>
         </FormViewV2.Content>
@@ -55,10 +56,8 @@ export function OdooPortalScreen() {
 
   function handleError(error: unknown) {
     loggerUseCases.error("Error al cargar Odoo Portal:", error);
-    UIEventBus.emit(UI_NOTIFICATION_EVENT, {
-      type: "error",
-      text1: "Error al cargar página",
-      text2: "Reintentando automáticamente...",
+    toast.danger("Reintentando automáticamente...", {
+      title: "Error al cargar página",
     });
   }
 

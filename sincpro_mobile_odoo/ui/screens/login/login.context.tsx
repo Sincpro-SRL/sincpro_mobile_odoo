@@ -1,3 +1,4 @@
+import { useNavigation } from "@react-navigation/native";
 import { LoginFormValues } from "@sincpro/mobile-odoo/domain/auth";
 import { OdooScreen } from "@sincpro/mobile-odoo/entrypoints/ui/AppScreen";
 import { useOdoo } from "@sincpro/mobile-odoo/entrypoints/ui/context";
@@ -9,7 +10,6 @@ import {
   useMemo,
 } from "react";
 import { Alert } from "react-native";
-import { useNavigate } from "react-router-native";
 
 interface ILoginContext {
   session: ReturnType<typeof useOdoo>["session"];
@@ -28,7 +28,7 @@ interface LoginProviderProps {
 }
 
 export function LoginProvider({ children }: LoginProviderProps) {
-  const navigate = useNavigate();
+  const navigation = useNavigation();
   const { session, login, authIsLoading, authError, serverParams } = useOdoo();
 
   const isServerConfigured = !!serverParams;
@@ -57,12 +57,12 @@ export function LoginProvider({ children }: LoginProviderProps) {
   );
 
   const handleGoToResetPassword = useCallback(() => {
-    navigate(OdooScreen.RESET_ACCOUNT);
-  }, [navigate]);
+    navigation.navigate(OdooScreen.RESET_ACCOUNT as never);
+  }, [navigation]);
 
   const handleGoToConfigureServer = useCallback(() => {
-    navigate(OdooScreen.SERVER);
-  }, [navigate]);
+    navigation.navigate(OdooScreen.SERVER as never);
+  }, [navigation]);
 
   const value = useMemo<ILoginContext>(
     () => ({

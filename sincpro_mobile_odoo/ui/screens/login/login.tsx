@@ -1,4 +1,5 @@
 import { LoginForm } from "@sincpro/mobile-odoo/ui/components/organisms";
+import type { AppBarBackground } from "@sincpro/mobile-ui/Navigation/Navigation.AppBar";
 import AuthFormView from "@sincpro/mobile-ui/views/AuthFormView";
 import type { ImageSourcePropType } from "react-native";
 
@@ -6,8 +7,10 @@ import { LoginProvider, useLogin } from "./login.context";
 
 function LoginScreenContent({
   logoSource,
+  background,
 }: {
   logoSource?: ImageSourcePropType;
+  background?: AppBarBackground;
 }) {
   const {
     authIsLoading,
@@ -20,6 +23,7 @@ function LoginScreenContent({
 
   return (
     <AuthFormView
+      background={background}
       description="Agrega tu acceso de usuario."
       FormNode={
         <LoginForm
@@ -39,10 +43,11 @@ function LoginScreenContent({
 
 export function LoginScreen({
   logoSource,
-}: { logoSource?: ImageSourcePropType } = {}) {
+  background,
+}: { logoSource?: ImageSourcePropType; background?: AppBarBackground } = {}) {
   return (
     <LoginProvider>
-      <LoginScreenContent logoSource={logoSource} />
+      <LoginScreenContent background={background} logoSource={logoSource} />
     </LoginProvider>
   );
 }

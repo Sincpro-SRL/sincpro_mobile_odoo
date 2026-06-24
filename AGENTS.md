@@ -137,4 +137,6 @@ Para cambios grandes (migraciones, refactors masivos, auditorías) se usa **orqu
 ## Para profundizar
 
 - [`docs/GOTCHAS.md`](docs/GOTCHAS.md) — trampas de dependencias, UI y runtime (síntoma → causa → fix). **Léelo si algo "raro" pasa.**
+- [`docs/UI_ROUTER_ROADMAP.md`](docs/UI_ROUTER_ROADMAP.md) — plan progresivo de UI, router, layouts, system-UI, Expo.
+- [`docs/FRAMEWORK_ROADMAP.md`](docs/FRAMEWORK_ROADMAP.md) — plan progresivo de la **plataforma core** (infra, primitivas DDD, cola/eventos, repos base, composición, tests). Si vas a mejorar el framework, elegí una fase (FF0-FF6) de acá.
 - `README.md` — visión de producto y filosofía.
