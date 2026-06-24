@@ -1,5 +1,7 @@
 # @sincpro/mobile-odoo
 
+> 🤖 **Agentes de IA:** leé [`AGENTS.md`](AGENTS.md) (orientación del ecosistema, patrones) y [`docs/GOTCHAS.md`](docs/GOTCHAS.md) (trampas conocidas).
+
 Integración **Odoo opcional** para el framework [Sincpro Mobile](https://github.com/Sincpro-SRL/sincpro_mobile). Trae el `OdooClient`, autenticación, servidor y `res.partner` reusables como un módulo de dominio listo para registrar.
 
 ## Instalación
@@ -42,10 +44,10 @@ export default createAppShell({
 Todo es vía Makefile:
 
 ```bash
-make init      # entorno + dependencias
-make check     # lint + typecheck
-make build     # compila a ./lib (tsc + tsc-alias)
-make format    # ordena imports + formatea
+make init           # entorno + dependencias
+make format         # auto-fix: eslint --fix + prettier + typecheck
+make verify-format  # gate de CI: format + falla si quedó algo (cubre lint + formato + tipos)
+make build          # compila a ./dist (tsc + tsc-alias)
 ```
 
 Imports internos absolutos (`@sincpro/mobile-odoo/...`), resueltos a relativo en el build.

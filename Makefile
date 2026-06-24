@@ -33,7 +33,10 @@ build:
 test:
 	@echo "Running tests..."
 
-verify-format: format typecheck
+doctor:
+	@bash scripts/doctor.sh
+
+verify-format: format typecheck doctor
 	@if ! git diff --quiet; then \
 	  echo >&2 "✘ El formateo ha modificado archivos. Por favor agrégalos al commit."; \
 	  git --no-pager diff --name-only HEAD -- >&2; \

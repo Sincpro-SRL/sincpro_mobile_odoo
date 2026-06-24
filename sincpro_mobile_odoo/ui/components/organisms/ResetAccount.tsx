@@ -1,11 +1,10 @@
-import { OdooScreen } from "@sincpro/mobile-odoo/entrypoints/ui/AppScreen";
-import { Form } from "@sincpro/mobile-ui";
+import { useNavigation } from "@react-navigation/native";
+import { Form } from "@sincpro/mobile-ui/Form";
 import { Typography } from "@sincpro/mobile-ui/Typography";
 import { View } from "react-native";
-import { useNavigate } from "react-router-native";
 
 function ResetAccount() {
-  const navigate = useNavigate();
+  const navigation = useNavigation();
   return (
     <View>
       <View className="mb-5">
@@ -26,9 +25,10 @@ function ResetAccount() {
       />
       <Form.Button
         onPress={() => {
-          navigate(OdooScreen.LOGIN);
+          navigation.goBack();
         }}
         title="Restablecer"
+        variant="cta"
       />
     </View>
   );

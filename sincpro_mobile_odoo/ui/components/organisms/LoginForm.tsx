@@ -1,5 +1,5 @@
 import { LoginFormValues } from "@sincpro/mobile-odoo/domain/auth";
-import { Form } from "@sincpro/mobile-ui";
+import { Form } from "@sincpro/mobile-ui/Form";
 import { Typography } from "@sincpro/mobile-ui/Typography";
 import { Controller, useForm } from "react-hook-form";
 import { TouchableOpacity, View } from "react-native";
@@ -110,6 +110,7 @@ function LoginForm({
         loading={isLoading}
         onPress={form.handleSubmit(onLogin)}
         title={"Ingresar"}
+        variant="cta"
       />
     </View>
   );
