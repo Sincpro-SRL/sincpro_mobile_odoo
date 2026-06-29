@@ -26,8 +26,8 @@
     "axios": "^1.11.0"
   },
   "peerDependencies": {
-    "@sincpro/mobile": ">=0.1.0",
-    "@sincpro/mobile-ui": ">=0.7.0",
+    "@sincpro/mobile": ">=0.4.3",
+    "@sincpro/mobile-ui": ">=0.7.2",
     "expo-intent-launcher": "*",
     "nativewind": ">=4",
     "react": "*",
@@ -40,8 +40,8 @@
     "@react-navigation/native-stack": ">=7"
   },
   "devDependencies": {
-    "@sincpro/mobile": "0.2.0",
-    "@sincpro/mobile-ui": "0.7.0",
+    "@sincpro/mobile": "0.4.3",
+    "@sincpro/mobile-ui": "0.7.2",
     "@types/react": "~19.1.10",
     "clsx": "^2.1.1",
     "eslint": "^9.35.0",
