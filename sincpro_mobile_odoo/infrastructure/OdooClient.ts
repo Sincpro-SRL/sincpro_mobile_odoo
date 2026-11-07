@@ -7,6 +7,7 @@ import {
   BackendError,
   DomainBackendError,
   DomainNetworkError,
+  RepeatableFailure,
   UserError,
   ValidationError,
 } from "@sincpro/mobile/exceptions";
@@ -15,7 +16,12 @@ import logger, {
 } from "@sincpro/mobile/infrastructure/logger";
 import { UIEventBus } from "@sincpro/mobile/infrastructure/ui/UIEventBus";
 import { IServer } from "@sincpro/mobile-odoo/domain/server";
-import axios, { AxiosRequestConfig, AxiosResponse, Method } from "axios";
+import axios, {
+  AxiosRequestConfig,
+  AxiosResponse,
+  isAxiosError,
+  Method,
+} from "axios";
 
 export interface IHttpRequestOptions {
   method: Method;
@@ -149,20 +155,71 @@ export class OdooClient {
     });
   }
 
-  async httpRequest<T = any>(
-    options: IHttpRequestOptions,
-  ): Promise<AxiosResponse<T>> {
-    const networkStatus = await NetworkAdapter.getStatus();
-
-    if (!networkStatus.isInternetReachable) {
+  private async checkConnectivity(): Promise<void> {
+    let networkStatus;
+    try {
+      networkStatus = await NetworkAdapter.getStatus();
+    } catch (error) {
       loggerOdooClient.warn(
-        "Network is not connected. Cannot perform HTTP request.",
+        "Could not determine Internet connectivity:",
+        error,
+      );
+      return;
+    }
+
+    if (
+      networkStatus.isInternetReachable === false ||
+      (networkStatus.isConnected === false && networkStatus.type !== "UNKNOWN")
+    ) {
+      loggerOdooClient.warn(
+        "Network adapter confirmed no Internet connection.",
       );
       UIEventBus.emit(InternetIsDownEvent.name);
       throw new DomainNetworkError("Sin conexión a Internet");
     }
 
-    UIEventBus.emit(InternetIsUpEvent.name);
+    if (networkStatus.isInternetReachable === true) {
+      UIEventBus.emit(InternetIsUpEvent.name);
+    }
+  }
+
+  private async handleTransportError(
+    error: unknown,
+    timeout: number,
+  ): Promise<void> {
+    if (
+      !isAxiosError(error) ||
+      error.response ||
+      !["ECONNABORTED", "ERR_NETWORK", "ETIMEDOUT"].includes(error.code ?? "")
+    ) {
+      return;
+    }
+
+    const isTimeout =
+      error.code === "ECONNABORTED" || error.code === "ETIMEDOUT";
+    loggerOdooClient.warn(
+      isTimeout
+        ? `Request timeout after ${timeout}ms`
+        : "Server unreachable. Check the server URL, TLS or server availability.",
+      error.message,
+    );
+
+    await this.checkConnectivity();
+
+    throw Object.assign(
+      new RepeatableFailure(
+        isTimeout
+          ? "Tiempo de espera agotado. Revisa tu conexión o problemas de servidor"
+          : "No se pudo conectar al servidor. Revisa la URL, TLS o la disponibilidad del servidor.",
+      ),
+      { cause: error, code: error.code },
+    );
+  }
+
+  async httpRequest<T = any>(
+    options: IHttpRequestOptions,
+  ): Promise<AxiosResponse<T>> {
+    await this.checkConnectivity();
 
     const config: AxiosRequestConfig = {
       ...OdooClient.AXIOS_CONFIG,
@@ -199,16 +256,7 @@ export class OdooClient {
       );
       return response;
     } catch (error: any) {
-      if (
-        error?.isAxiosError &&
-        ["ECONNABORTED", "ERR_NETWORK", "ETIMEDOUT"].includes(error.code)
-      ) {
-        loggerOdooClient.warn(`HTTP request timeout after ${config.timeout}ms`);
-        UIEventBus.emit(InternetIsDownEvent.name);
-        throw new DomainNetworkError(
-          "Tiempo de espera agotado. Revisa tu conexión o problemas de servidor",
-        );
-      }
+      await this.handleTransportError(error, config.timeout!);
       loggerOdooClient.warn(`HTTP request error:`, error.message);
       throw error;
     }
@@ -227,17 +275,7 @@ export class OdooClient {
       );
     }
 
-    const networkStatus = await NetworkAdapter.getStatus();
-
-    if (!networkStatus.isInternetReachable) {
-      loggerOdooClient.warn(
-        "Network is not connected. Cannot perform HTTP request.",
-      );
-      UIEventBus.emit(InternetIsDownEvent.name);
-      throw new DomainNetworkError("Sin conexión a Internet");
-    }
-
-    UIEventBus.emit(InternetIsUpEvent.name);
+    await this.checkConnectivity();
 
     const config: AxiosRequestConfig = {
       ...OdooClient.AXIOS_CONFIG,
@@ -270,16 +308,7 @@ export class OdooClient {
       );
       return response;
     } catch (error: any) {
-      if (
-        error?.isAxiosError &&
-        ["ECONNABORTED", "ERR_NETWORK", "ETIMEDOUT"].includes(error.code)
-      ) {
-        loggerOdooClient.warn(`HTTP request timeout after ${config.timeout}ms`);
-        UIEventBus.emit(InternetIsDownEvent.name);
-        throw new DomainNetworkError(
-          "Tiempo de espera agotado. Revisa tu conexión o problemas de servidor",
-        );
-      }
+      await this.handleTransportError(error, config.timeout!);
       loggerOdooClient.warn(`HTTP request error:`, error.message);
       throw new DomainBackendError(
         `Error during HTTP request to server to ${path}: ${error.message}`,
@@ -288,17 +317,7 @@ export class OdooClient {
   }
 
   private async jsonRpc<T>(method: string, params: JsonRpcParams): Promise<T> {
-    const networkStatus = await NetworkAdapter.getStatus();
-
-    if (!networkStatus.isInternetReachable) {
-      loggerOdooClient.warn(
-        "Network is not connected. Cannot perform Odoo RPC call.",
-      );
-      UIEventBus.emit(InternetIsDownEvent.name);
-      throw new DomainNetworkError("Sin conexión a Internet");
-    }
-
-    UIEventBus.emit(InternetIsUpEvent.name);
+    await this.checkConnectivity();
 
     const payload = {
       jsonrpc: "2.0",
@@ -325,18 +344,8 @@ export class OdooClient {
       }
       return data.result as T;
     } catch (error: any) {
-      if (
-        error?.isAxiosError &&
-        ["ECONNABORTED", "ERR_NETWORK", "ETIMEDOUT"].includes(error.code)
-      ) {
-        loggerOdooClient.warn(
-          `Request timeout after ${OdooClient.REQUEST_TIMEOUT_MS}ms`,
-        );
-        UIEventBus.emit(InternetIsDownEvent.name);
-        throw new DomainNetworkError(
-          "Tiempo de espera agotado. Revisa tu conexión o problemas de servidor",
-        );
-      }
+      await this.handleTransportError(error, OdooClient.REQUEST_TIMEOUT_MS);
+      loggerOdooClient.warn("Odoo RPC request error:", error);
       throw error;
     }
   }
@@ -586,6 +595,12 @@ export class OdooClient {
       }
 
       loggerOdooClient.warn(`Error querying model ${model}:`, error);
+      if (
+        error instanceof DomainNetworkError ||
+        error instanceof RepeatableFailure
+      ) {
+        throw error;
+      }
       return {
         length: 0,
         records: [],

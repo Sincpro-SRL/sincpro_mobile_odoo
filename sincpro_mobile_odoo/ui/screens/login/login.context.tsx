@@ -33,14 +33,7 @@ export function LoginProvider({ children }: LoginProviderProps) {
 
   const isServerConfigured = !!serverParams;
 
-  const errorMessage = useMemo(() => {
-    return (
-      authError ||
-      (isServerConfigured
-        ? ""
-        : "Debe configurar el servidor antes de iniciar sesión.")
-    );
-  }, [authError, isServerConfigured]);
+  const errorMessage = authError || "";
 
   const handleLogin = useCallback(
     (data: LoginFormValues) => {
