@@ -31,7 +31,7 @@ build:
 	@echo "✓ Build listo en ./dist (JS + .d.ts, alias @ resuelto a relativo)"
 
 test:
-	@echo "Running tests..."
+	@node --test tests/*.test.cjs
 
 doctor:
 	@bash scripts/doctor.sh

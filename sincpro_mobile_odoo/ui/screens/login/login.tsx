@@ -28,11 +28,11 @@ function LoginScreenContent({
       FormNode={
         <LoginForm
           configureServer={handleGoToConfigureServer}
+          disabled={!isServerConfigured}
           error={errorMessage}
           isLoading={authIsLoading}
           onLogin={handleLogin}
           onResetAccount={handleGoToResetPassword}
-          readonly={!isServerConfigured}
         />
       }
       logoSource={logoSource}

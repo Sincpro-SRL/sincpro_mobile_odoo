@@ -26,6 +26,13 @@
 - **Causa:** se re-exporta el mismo símbolo por dos `export *` (su barrel de contexto **y** `domain/events.ts`). TypeScript lo elimina del barrel raíz en silencio.
 - **Fix:** un evento se exporta por **una sola ruta**: `domain/events.ts`. Los barrels de contexto no re-exportan sus eventos.
 
+### Odoo muestra "sin conexión" aunque Internet funciona
+
+- **Síntoma:** una URL incorrecta, TLS bloqueado o un servidor caído se reportan como timeout y dejan el indicador offline activo.
+- **Causa:** `ERR_NETWORK` describe un fallo de transporte hacia el servidor, no confirma una caída de Internet. La conectividad desconocida (`isInternetReachable: null`) tampoco confirma offline.
+- **Fix:** `OdooClient` consulta `NetworkAdapter` del core (Expo Network) antes de la solicitud y nuevamente ante un fallo de transporte. Solo emite `InternetIsDownEvent` si el adaptador confirma falta de alcance o desconexión con tipo conocido; un estado desconocido no inventa eventos y un fallo del adaptador se registra. `ERR_NETWORK` informa servidor inalcanzable; `ECONNABORTED`/`ETIMEDOUT` mantienen el mensaje de timeout y el timeout configurado en el log. Los errores HTTP/JSON-RPC conservan su mapeo. `queryModel` propaga fallos de transporte durante autenticación en lugar de devolver una lista vacía.
+- **Compatibilidad con la cola:** el core interpreta cualquier `DomainNetworkError` de un subscriber como offline y emite su propio `InternetIsDownEvent`. Por eso Odoo reserva `DomainNetworkError` para desconexión confirmada; servidor inalcanzable/timeout sin offline confirmado lanzan `RepeatableFailure`, con `code` y `cause` originales. Ambas clases conservan el tratamiento reintentable del EventBus, pero solo la primera cambia la conectividad global. Consumidores que capturaban `DomainNetworkError` para cualquier fallo de transporte deben contemplar también `RepeatableFailure`; los mensajes de timeout y los errores de API no cambian.
+
 ---
 
 ## Dependencias / packaging
@@ -57,6 +64,13 @@
 ---
 
 ## UI / Expo / build nativo
+
+### Login sin servidor parece editable o muestra errores requeridos antes de interacción
+
+- **Síntoma:** los campos parecen habilitados y el formulario muestra errores de acceso cuando todavía falta configurar el servidor.
+- **Causa:** `readonly` solo deshabilitaba el botón de ingreso; la ausencia de servidor se mezclaba con errores de autenticación.
+- **Fix:** `LoginScreen` pasa `disabled` a `LoginForm`; este usa un banner informativo y la acción principal **Configurar servidor** hacia `OdooScreen.SERVER`. Los campos reciben `disabled` y, por compatibilidad con DS 2.0, `editable: false`, estado accesible disabled, opacidad y bloqueo de interacciones (incluido el control de contraseña). `readonly` sigue disponible como alias compatible. Al guardar y volver, el login se habilita sin cambiar `AuthFormView`, safe area, branding ni rutas de configuración/reset. React Hook Form valida con `mode: "onTouched"`: primer blur o submit, luego cambios; la falta de servidor no se presenta como error de autenticación.
+- **Regresión:** `make test` ejecuta `node --test tests/*.test.cjs`, sin dispositivos ni servicios reales. Las pruebas usan React Hook Form real, renderizador React y mocks en los puertos de red/DS/navegación para cubrir errores de transporte, conectividad desconocida/offline, mapeo de API, reintentos y el flujo configurar → guardar → volver → ingresar.
 
 ### Logo/branding desaparece tras migrar (Display.Logo, HomeHeader, AuthFormView)
 

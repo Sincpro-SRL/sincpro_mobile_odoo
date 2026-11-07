@@ -1,4 +1,5 @@
 import { LoginFormValues } from "@sincpro/mobile-odoo/domain/auth";
+import { Feedback } from "@sincpro/mobile-ui/Feedback";
 import { Form } from "@sincpro/mobile-ui/Form";
 import { Typography } from "@sincpro/mobile-ui/Typography";
 import { Controller, useForm } from "react-hook-form";
@@ -10,6 +11,7 @@ interface LoginFormProps {
   onResetAccount: () => void;
   isLoading: boolean;
   error?: string;
+  disabled?: boolean;
   readonly?: boolean;
 }
 
@@ -18,11 +20,18 @@ function LoginForm({
   error,
   onResetAccount,
   configureServer,
-  readonly,
+  disabled = false,
+  readonly = false,
   isLoading,
 }: LoginFormProps) {
+  const fieldsDisabled = disabled || readonly;
+  const disabledProps = { disabled: fieldsDisabled };
+  const inputState = {
+    editable: !fieldsDisabled,
+    accessibilityState: { disabled: fieldsDisabled },
+  };
   const form = useForm<LoginFormValues>({
-    mode: "all",
+    mode: "onTouched",
     defaultValues: {
       email: "",
       password: "",
@@ -30,7 +39,7 @@ function LoginForm({
   });
 
   function renderError() {
-    if (!error) {
+    if (!error || fieldsDisabled) {
       return null;
     }
 
@@ -43,73 +52,95 @@ function LoginForm({
 
   return (
     <View>
-      <Controller
-        control={form.control}
-        name="email"
-        render={({ field: { onChange, onBlur, value } }) => (
-          <Form.InputField
-            error={form.formState.errors.email?.message}
-            inputProps={{
-              placeholder: "andru@coopebrisas.com",
-              autoCapitalize: "none",
-              autoComplete: "off",
-              importantForAutofill: "no",
-              onBlur,
-              onChangeText: onChange,
-              value,
-            }}
-            label="Usuario"
-          />
-        )}
-        rules={{
-          required: "El correo es requerido",
-        }}
-      />
+      {fieldsDisabled && (
+        <Feedback.Banner
+          className="mb-4"
+          message="Configura el servidor para habilitar el acceso a tu cuenta."
+          title="Servidor no configurado"
+          tone="info"
+        />
+      )}
+      <View
+        className={fieldsDisabled ? "opacity-50" : undefined}
+        pointerEvents={fieldsDisabled ? "none" : "auto"}
+      >
+        <Controller
+          control={form.control}
+          disabled={fieldsDisabled}
+          name="email"
+          render={({ field: { onChange, onBlur, value }, fieldState }) => (
+            <Form.InputField
+              {...disabledProps}
+              error={fieldsDisabled ? undefined : fieldState.error?.message}
+              inputProps={{
+                ...inputState,
+                placeholder: "andru@coopebrisas.com",
+                autoCapitalize: "none",
+                autoComplete: "off",
+                importantForAutofill: "no",
+                onBlur,
+                onChangeText: onChange,
+                value,
+              }}
+              label="Usuario"
+            />
+          )}
+          rules={{
+            required: "El correo es requerido",
+          }}
+        />
 
-      <Controller
-        control={form.control}
-        name="password"
-        render={({ field: { onChange, onBlur, value } }) => (
-          <Form.PasswordInput
-            error={form.formState.errors.password?.message}
-            inputProps={{
-              placeholder: "***********",
-              onBlur,
-              autoCapitalize: "none",
-              onChangeText: onChange,
-              value,
-            }}
-            label="Contraseña"
-          />
-        )}
-        rules={{ required: "La contraseña es requerida" }}
-      />
+        <Controller
+          control={form.control}
+          disabled={fieldsDisabled}
+          name="password"
+          render={({ field: { onChange, onBlur, value }, fieldState }) => (
+            <Form.PasswordInput
+              {...disabledProps}
+              error={fieldsDisabled ? undefined : fieldState.error?.message}
+              inputProps={{
+                ...inputState,
+                placeholder: "***********",
+                onBlur,
+                autoCapitalize: "none",
+                onChangeText: onChange,
+                value,
+              }}
+              label="Contraseña"
+            />
+          )}
+          rules={{ required: "La contraseña es requerida" }}
+        />
+      </View>
 
       {renderError()}
 
-      <View className="mb-4 justify-end items-end">
-        <TouchableOpacity onPress={onResetAccount}>
-          <Typography.Text underline variant="bodySmall">
-            {"¿Olvidaste tu contraseña?"}
-          </Typography.Text>
-        </TouchableOpacity>
-      </View>
-      <View className="mb-4 justify-end items-end">
-        <TouchableOpacity onPress={configureServer}>
-          <Typography.Text
-            className="text-text-secondary"
-            underline
-            variant="bodySmall"
-          >
-            {"Agregar servidor"}
-          </Typography.Text>
-        </TouchableOpacity>
-      </View>
+      {!fieldsDisabled && (
+        <>
+          <View className="mb-4 justify-end items-end">
+            <TouchableOpacity onPress={onResetAccount}>
+              <Typography.Text underline variant="bodySmall">
+                {"¿Olvidaste tu contraseña?"}
+              </Typography.Text>
+            </TouchableOpacity>
+          </View>
+          <View className="mb-4 justify-end items-end">
+            <TouchableOpacity onPress={configureServer}>
+              <Typography.Text
+                className="text-text-secondary"
+                underline
+                variant="bodySmall"
+              >
+                {"Agregar servidor"}
+              </Typography.Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
       <Form.Button
-        disabled={readonly}
-        loading={isLoading}
-        onPress={form.handleSubmit(onLogin)}
-        title={"Ingresar"}
+        loading={!fieldsDisabled && isLoading}
+        onPress={fieldsDisabled ? configureServer : form.handleSubmit(onLogin)}
+        title={fieldsDisabled ? "Configurar servidor" : "Ingresar"}
         variant="cta"
       />
     </View>
