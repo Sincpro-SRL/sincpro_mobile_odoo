@@ -1,4 +1,8 @@
-import { EntityCollection, ICriteria } from "@sincpro/mobile/domain/entity";
+import {
+  type DocumentCriteria,
+  rowsMatching,
+} from "@sincpro/mobile/domain/database";
+import { EntityCollection } from "@sincpro/mobile/domain/entity";
 import { DBCursor } from "@sincpro/mobile/infrastructure/database";
 import logger from "@sincpro/mobile/infrastructure/logger";
 import { EOdooRepository } from "@sincpro/mobile-odoo/domain/repository";
@@ -60,9 +64,11 @@ class ServerRepositoryImpl {
   }
 
   async findByCriteria(
-    criteria: ICriteria<any>[],
+    criteria: DocumentCriteria<IServer>,
   ): Promise<EntityCollection<any>> {
-    throw new Error("Not implemented");
+    const stored = await this.findAll();
+    const matched = rowsMatching(stored.toArray() as IServer[], criteria);
+    return new EntityCollection(matched as any);
   }
 }
 

@@ -542,33 +542,43 @@
   resolved "https://registry.yarnpkg.com/@nolyfill/is-core-module/-/is-core-module-1.0.39.tgz#3dc35ba0f1e66b403c00b39344f870298ebb1c8e"
   integrity sha512-nn5ozdjYQpUCZlWGuxcJY/KpxkWQs4DcbMCmKojjyrYDEAGy4Ce19NN4v5MduafTwJlbKc99UA8YhSVqq9yPZA==
 
-"@opentelemetry/api@^1.9.0":
-  version "1.9.1"
-  resolved "https://registry.yarnpkg.com/@opentelemetry/api/-/api-1.9.1.tgz#c1b0346de336ba55af2d5a7970882037baedec05"
-  integrity sha512-gLyJlPHPZYdAk1JENA9LeHejZe1Ti77/pTeFm/nMXmQH/HFZlcS/O2XJB+L8fkbrNSqhdtlvjBVjxwUYanNH5Q==
+"@opentelemetry/api@^1.9.1":
+  version "1.10.0"
+  resolved "https://registry.yarnpkg.com/@opentelemetry/api/-/api-1.10.0.tgz#31d2e3d36ffc6cdd5ce165251e7fa13bbad0fd8a"
+  integrity sha512-lMkyes8iHrG+mk6WH7X70MdCLI2RS0FwNBY1PyQ8UemaijE2m5mv5A0Niy3HtbYTFrgkUEQjFMXmSAk2hQDuPQ==
 
-"@opentelemetry/core@2.8.0", "@opentelemetry/core@^2.8.0":
-  version "2.8.0"
-  resolved "https://registry.yarnpkg.com/@opentelemetry/core/-/core-2.8.0.tgz#f6e86de3688bdb54a6ca8f4935363a5b588ae91c"
-  integrity sha512-hd1Lfh8p545nNz+jq1Ejfz+Mn1hyLuxYn1YzTfFNrxr8urEWMNQLPf1Th8kjOH+HxwawCrtgBp8JpBUR4ZSgww==
+"@opentelemetry/core@2.12.0", "@opentelemetry/core@^2.10.0":
+  version "2.12.0"
+  resolved "https://registry.yarnpkg.com/@opentelemetry/core/-/core-2.12.0.tgz#b44e9806111f066a2df578e37fc88ef46ccdfe20"
+  integrity sha512-1HsSAuvT4/my0QrXWsyXFdWjKaPeCHsismKZgEEIb8NK13LP6DrMRlsUbvD/0F9mDWK3xDom9AMv3IscxgOnOQ==
   dependencies:
     "@opentelemetry/semantic-conventions" "^1.29.0"
 
-"@opentelemetry/resources@2.8.0", "@opentelemetry/resources@^2.8.0":
-  version "2.8.0"
-  resolved "https://registry.yarnpkg.com/@opentelemetry/resources/-/resources-2.8.0.tgz#9bcb658ab6254f33099f4a95544b40d6f53cc946"
-  integrity sha512-qmXQ27ilDbUK/vGMqwL8D4/rhn76C+sherM4wTbjlfknR8Nvfc/hCxjRJPhkzZzUsPiNg16SA31NxMabwttRjg==
+"@opentelemetry/resources@2.12.0", "@opentelemetry/resources@^2.10.0":
+  version "2.12.0"
+  resolved "https://registry.yarnpkg.com/@opentelemetry/resources/-/resources-2.12.0.tgz#3a0fceb16c44d4d024f25f3f76eb773a7df67847"
+  integrity sha512-+rSRoOdln6NhXTVcBdHSlZxJDNzwxadeweK2ltZO3tVtfp6aklABc06xclDk6ovRR+EiGgIcSbh/6NgjFhnb3A==
   dependencies:
-    "@opentelemetry/core" "2.8.0"
+    "@opentelemetry/core" "2.12.0"
     "@opentelemetry/semantic-conventions" "^1.29.0"
 
-"@opentelemetry/sdk-trace-base@^2.8.0":
-  version "2.8.0"
-  resolved "https://registry.yarnpkg.com/@opentelemetry/sdk-trace-base/-/sdk-trace-base-2.8.0.tgz#ec9c1d69e2e6fba256c9df0c8e8d67d42386d52b"
-  integrity sha512-mhU4jp+vW0mGbFRd+GeXHvmfA4aDqWjBjLC3pE5XMpLs0IE2ryYb019Ts2AQrOq67gaTF25D91+fgvEHDZEnuQ==
+"@opentelemetry/sdk-trace-base@^2.10.0":
+  version "2.12.0"
+  resolved "https://registry.yarnpkg.com/@opentelemetry/sdk-trace-base/-/sdk-trace-base-2.12.0.tgz#9112b4c3f49d3f1e8c4db1d76e7ce4fd60f8d946"
+  integrity sha512-JOERgZCxRM06FEJ5kEWxlSRChah6MmXDx3KwCruqEv/iEyLkTokCSemf2y1w8oIHtfrr8EVTpzebq/31vn2Cpg==
   dependencies:
-    "@opentelemetry/core" "2.8.0"
-    "@opentelemetry/resources" "2.8.0"
+    "@opentelemetry/core" "2.12.0"
+    "@opentelemetry/resources" "2.12.0"
+    "@opentelemetry/sdk-trace" "2.12.0"
+    "@opentelemetry/semantic-conventions" "^1.29.0"
+
+"@opentelemetry/sdk-trace@2.12.0":
+  version "2.12.0"
+  resolved "https://registry.yarnpkg.com/@opentelemetry/sdk-trace/-/sdk-trace-2.12.0.tgz#1fb0b9bd64e547df9561f3a229d7a93f245eeccd"
+  integrity sha512-ImVuRQ6faOsTi1Wna88s2avgrrf/iDgXPigIeynkUhjstMuoQUDOJXgkez2j1mlU4btjXcXBGa+q7qKFYR3GsA==
+  dependencies:
+    "@opentelemetry/core" "2.12.0"
+    "@opentelemetry/resources" "2.12.0"
     "@opentelemetry/semantic-conventions" "^1.29.0"
 
 "@opentelemetry/semantic-conventions@^1.29.0":
@@ -733,33 +743,44 @@
   resolved "https://registry.yarnpkg.com/@sinclair/typebox/-/typebox-0.27.10.tgz#beefe675f1853f73676aecc915b2bd2ac98c4fc6"
   integrity sha512-MTBk/3jGLNB2tVxv6uLlFh1iu64iYOQ2PbdOSK3NW8JZsmlaOh2q6sdtKowBhfw8QFLmYNzTW4/oK4uATIi6ZA==
 
-"@sincpro/mobile-ui@0.7.2":
-  version "0.7.2"
-  resolved "https://registry.yarnpkg.com/@sincpro/mobile-ui/-/mobile-ui-0.7.2.tgz#9921f54f25e5460bbf5f6e207490a50ca0b8c38f"
-  integrity sha512-rFvE9oGrcxvC2zkZuLAlGX9RgPZDjgBxJCJF3e7K+Or7EYXE0NCBDc1OYHNYIWoRNPV2HpebdAgKkSwcqkL9Mw==
+"@sincpro/client-framework@^0.6.0":
+  version "0.6.0"
+  resolved "https://registry.yarnpkg.com/@sincpro/client-framework/-/client-framework-0.6.0.tgz#c0fe03b472b20e11e9d9328c560886311ee61767"
+  integrity sha512-3mbMqsiIdMV9uu+7TGKq72+iO20GiNsPzLrC6wI2+CjdCqCS+U3V4qGRKeIZfpgq4YzBGr63zocerx/N1J3Qww==
+
+"@sincpro/criteria@^2.1.0":
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/@sincpro/criteria/-/criteria-2.1.0.tgz#9d1d56e78e7bb76f9e15a5a1c3c5684e254860d7"
+  integrity sha512-rXOCC5MxYTZ1JYiJ++8EJFvkYpMRMZl4JQ9PNgqzYa/StsZjGJsK7mnQAqdJb2TfHuwUys8gMxj9wp4fEZN5ZQ==
+
+"@sincpro/mobile-ui@2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@sincpro/mobile-ui/-/mobile-ui-2.0.0.tgz#5012f94ca0a1808127a8ce195636238938ad04ee"
+  integrity sha512-nryMm5uPBuncq51VgZ87M/nqUJZNGe2QvAO2zC8tRfd+V6GUEjE+Kc0uI6pezKmQkzrwTcZYU8oV/UDySGh0kQ==
   dependencies:
     big.js "^7.0.1"
     clsx "^2.1.1"
-    dayjs "^1.11.18"
+    dayjs "^1.11.21"
     tailwind-merge "^3.4.0"
     tailwind-variants "^3.2.2"
 
-"@sincpro/mobile@0.4.3":
-  version "0.4.3"
-  resolved "https://registry.yarnpkg.com/@sincpro/mobile/-/mobile-0.4.3.tgz#e82f4d31cdf8d6e3bf9fa9878ff633486e55e727"
-  integrity sha512-I+usWqw5vUGUb+Lomalg7XvZseBUEXFuJdejzmMy8nimVyDeCFo2OM8H3V+mcFNbC92VcrqZyQknmRHP5lLkhg==
+"@sincpro/mobile@1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@sincpro/mobile/-/mobile-1.0.0.tgz#ca7de1cd85fd2198522121334aaee5a1cc549a0f"
+  integrity sha512-mCaeLHkwfyJyQ3qWQBzUB8RYE7CIyvw6baqeoUs4zDrx1SS4u9SSkbISdaEXo3NYvDx2au5lXEwoxPtsVeTjmw==
   dependencies:
-    "@opentelemetry/api" "^1.9.0"
-    "@opentelemetry/core" "^2.8.0"
-    "@opentelemetry/resources" "^2.8.0"
-    "@opentelemetry/sdk-trace-base" "^2.8.0"
+    "@opentelemetry/api" "^1.9.1"
+    "@opentelemetry/core" "^2.10.0"
+    "@opentelemetry/resources" "^2.10.0"
+    "@opentelemetry/sdk-trace-base" "^2.10.0"
+    "@sincpro/client-framework" "^0.6.0"
+    "@sincpro/criteria" "^2.1.0"
     async-mutex "^0.5.0"
     big.js "^7.0.1"
-    dayjs "^1.11.18"
+    dayjs "^1.11.21"
     mitt "^3.0.1"
     pdf-lib "^1.17.1"
     tailwind-variants "^3.2.2"
-    uuid "^13.0.0"
 
 "@sinonjs/commons@^3.0.0":
   version "3.0.1"
@@ -1739,10 +1760,10 @@ data-view-byte-offset@^1.0.1:
     es-errors "^1.3.0"
     is-data-view "^1.0.1"
 
-dayjs@^1.11.18:
-  version "1.11.21"
-  resolved "https://registry.yarnpkg.com/dayjs/-/dayjs-1.11.21.tgz#57f87562e62de76f3c704bd2b8d522fc33068eb2"
-  integrity sha512-98IT+HOahAisibz/yjKbzuOBwYcjJ7BCLPzARyHiyEBmRz4fatF+KPJszEHXsGYjUG234aH/cOjW1wwTbKUZlA==
+dayjs@^1.11.21:
+  version "1.11.23"
+  resolved "https://registry.yarnpkg.com/dayjs/-/dayjs-1.11.23.tgz#b0a363506dde5f36cf5075e42ebe8115165a8c79"
+  integrity sha512-QDTCU0M0MxR3hQfnlDJfwekQiaanm1ubOD231u73WBckQ/fsamwRLiE2GBz6D3a/xF1NgfiDLJjXBa1hYOYTtQ==
 
 debug@2.6.9, debug@^2.6.9:
   version "2.6.9"
@@ -4855,11 +4876,6 @@ utils-merge@1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/utils-merge/-/utils-merge-1.0.1.tgz#9f95710f50a267947b2ccc124741c1028427e713"
   integrity sha512-pMZTvIkT1d+TFGvDOqodOclx0QWkkgi6Tdoa8gC8ffGAAqz9pzPTZWAybbsHHoED/ztMtkv/VoYTYyShUn81hA==
-
-uuid@^13.0.0:
-  version "13.0.2"
-  resolved "https://registry.yarnpkg.com/uuid/-/uuid-13.0.2.tgz#41bc9c07b12f665089c205f6507976adbdf84ff8"
-  integrity sha512-vzi9uRZ926x4XV73S/4qQaTwPXM2JBj6/6lI/byHH1jOpCzb0zDbfytgA9LcN/hzb2l7WQSQnxITOVx5un/wGw==
 
 vlq@^1.0.0:
   version "1.0.1"
