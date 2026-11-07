@@ -1,5 +1,6 @@
-import { IRepository } from "@sincpro/mobile/domain/database";
-import { EntityCollection, ICriteria } from "@sincpro/mobile/domain/entity";
+import { type DocumentCriteria } from "@sincpro/mobile/domain/database";
+import { EntityCollection } from "@sincpro/mobile/domain/entity";
+import { type IRepository } from "@sincpro/mobile/domain/repositories";
 import { DBCursor } from "@sincpro/mobile/infrastructure/database";
 import { loggerRepositories } from "@sincpro/mobile/infrastructure/logger";
 import { OdooSession } from "@sincpro/mobile-odoo/domain/auth";
@@ -85,16 +86,18 @@ class AuthRepositoryImpl implements IRepository<
     return new EntityCollection<OdooSession>(sessions as any[]);
   }
 
+  async upsert(
+    entity: OdooSession | OdooSession[] | EntityCollection<OdooSession>,
+  ): Promise<void> {
+    await this.save(entity);
+  }
+
+  async publish(): Promise<void> {}
+
   async findByCriteria(
-    criteria: ICriteria<OdooSession>[],
+    criteria: DocumentCriteria<OdooSession>,
   ): Promise<EntityCollection<OdooSession>> {
-    const all = await this.findAll();
-    return all.filter((session) => {
-      return criteria.every((criterion) => {
-        const value = session[criterion.field as keyof OdooSession];
-        return value === criterion.value;
-      });
-    });
+    return (await this.findAll()).findByCriteria(criteria);
   }
 
   async remove(entity: OdooSession | OdooSession[]): Promise<void> {

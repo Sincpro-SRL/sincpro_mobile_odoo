@@ -1,4 +1,4 @@
-import { Subscriber } from "@sincpro/mobile/domain/event_sourcing";
+import { Subscriber } from "@sincpro/mobile/event_driven";
 import { loggerQueueProcessor } from "@sincpro/mobile/infrastructure/logger";
 import { OdooLoggedOutEvent } from "@sincpro/mobile-odoo/domain/auth";
 

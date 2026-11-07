@@ -1,4 +1,4 @@
-import type { Subscriber } from "@sincpro/mobile/domain/event_sourcing";
+import type { Subscriber } from "@sincpro/mobile/event_driven";
 
 import { LoggedOutSubscriber } from "./loggedOut.subscriber";
 

@@ -1,6 +1,6 @@
-import { DomainEvent } from "@sincpro/mobile/domain/event_sourcing";
+import { IntegrationEvent } from "@sincpro/mobile/domain/events";
 
-export class OdooLoggedInEvent extends DomainEvent {
+export class OdooLoggedInEvent extends IntegrationEvent {
   static readonly name = "odoo.auth.v2.logged_in";
   static readonly label = "Usuario autenticado en Odoo";
   static readonly requiresNetwork = false;
@@ -19,7 +19,7 @@ export class OdooLoggedInEvent extends DomainEvent {
   public companyIds: number[] = [];
 }
 
-export class OdooLoggedOutEvent extends DomainEvent {
+export class OdooLoggedOutEvent extends IntegrationEvent {
   static readonly name = "odoo.auth.v2.logged_out";
   static readonly label = "Usuario cerró sesión en Odoo";
   static readonly requiresNetwork = false;
