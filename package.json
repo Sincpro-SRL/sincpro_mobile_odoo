@@ -22,6 +22,9 @@
   "repository": "https://github.com/Sincpro-SRL/sincpro_mobile_odoo",
   "author": "Gutierrez, Andres <andres.gutierrez@sincpro.com.bo>",
   "license": "MIT",
+  "engines": {
+    "node": ">=26"
+  },
   "dependencies": {
     "axios": "^1.11.0"
   },
