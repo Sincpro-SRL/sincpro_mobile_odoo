@@ -1,4 +1,5 @@
 import { LoginFormValues } from "@sincpro/mobile-odoo/domain/auth";
+import { Actions } from "@sincpro/mobile-ui/Actions";
 import { Feedback } from "@sincpro/mobile-ui/Feedback";
 import { Form } from "@sincpro/mobile-ui/Form";
 import { Typography } from "@sincpro/mobile-ui/Typography";
@@ -137,7 +138,7 @@ function LoginForm({
           </View>
         </>
       )}
-      <Form.Button
+      <Actions.Button
         loading={!fieldsDisabled && isLoading}
         onPress={fieldsDisabled ? configureServer : form.handleSubmit(onLogin)}
         title={fieldsDisabled ? "Configurar servidor" : "Ingresar"}

@@ -1,9 +1,10 @@
 import { IServer } from "@sincpro/mobile-odoo/domain/server";
+import { Actions } from "@sincpro/mobile-ui/Actions";
 import { Form } from "@sincpro/mobile-ui/Form";
 import { Controller, useForm } from "react-hook-form";
 import { View } from "react-native";
 
-const Button = Form.Button;
+const Button = Actions.Button;
 const InputField = Form.InputField;
 
 interface ServerConfigFormProps {

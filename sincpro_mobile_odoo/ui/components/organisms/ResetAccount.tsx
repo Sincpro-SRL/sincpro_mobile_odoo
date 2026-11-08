@@ -1,4 +1,5 @@
 import { useNavigation } from "@react-navigation/native";
+import { Actions } from "@sincpro/mobile-ui/Actions";
 import { Form } from "@sincpro/mobile-ui/Form";
 import { Typography } from "@sincpro/mobile-ui/Typography";
 import { View } from "react-native";
@@ -23,7 +24,7 @@ function ResetAccount() {
         }}
         label="Email"
       />
-      <Form.Button
+      <Actions.Button
         onPress={() => {
           navigation.goBack();
         }}
