@@ -44,7 +44,7 @@
   },
   "devDependencies": {
     "@sincpro/mobile": "1.1.0",
-    "@sincpro/mobile-ui": "3.0.0",
+    "@sincpro/mobile-ui": "3.0.1",
     "@types/react": "~19.3.0",
     "clsx": "^2.1.1",
     "eslint": "^9.35.0",
