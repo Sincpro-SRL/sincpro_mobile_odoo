@@ -1,6 +1,6 @@
 {
   "name": "@sincpro/mobile-odoo",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "description": "Integración Odoo opcional para el framework Sincpro Mobile: OdooClient, auth, servidor y res.partner reusables",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
