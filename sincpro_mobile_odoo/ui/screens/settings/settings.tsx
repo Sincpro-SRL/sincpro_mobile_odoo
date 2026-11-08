@@ -23,7 +23,9 @@ function PermissionBadge({ granted }: { granted: boolean }) {
         paddingHorizontal: 10,
         paddingVertical: 4,
         borderRadius: 999,
-        backgroundColor: granted ? theme.successLight : theme.warningLight,
+        backgroundColor: granted
+          ? theme.container.success
+          : theme.container.warning,
         flexDirection: "row",
         alignItems: "center",
         gap: 5,

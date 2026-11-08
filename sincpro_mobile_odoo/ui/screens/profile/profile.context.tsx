@@ -35,7 +35,7 @@ export function ProfileProvider({
   mainRoute = "Main",
 }: ProfileProviderProps) {
   const navigation = useNavigation();
-  const { show, hide } = useConfirmationContext();
+  const { show } = useConfirmationContext();
   const { session, authIsLoading, logout } = useOdoo();
   const [debugMode, setDebugMode] = useState(false);
 
@@ -50,14 +50,12 @@ export function ProfileProvider({
         "¿Estás seguro de que quieres cerrar sesión?\nAl cerrar sesión, los datos de tu sesión se perderán",
       confirmText: "Cerrar sesión",
       cancelText: "Cancelar",
+      destructive: true,
       onConfirm: async () => {
-        hide();
         await logout();
-        // conditional rendering in the host app handles switching to Login automatically
       },
-      onCancel: () => hide(),
     });
-  }, [show, hide, logout, navigation]);
+  }, [show, logout]);
 
   const handleSettings = useCallback(() => {
     navigation.navigate(OdooScreen.SETTINGS as never);
