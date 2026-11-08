@@ -36,6 +36,9 @@ function setup(serverParams = null) {
           .default;
       },
     },
+    "@sincpro/mobile-ui/Actions": {
+      Actions: { Button: "Button" },
+    },
     "@sincpro/mobile-ui/Form": {
       Form: {
         InputField: "InputField",
