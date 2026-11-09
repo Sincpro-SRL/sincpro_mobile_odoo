@@ -2,24 +2,45 @@ import { WebViewAdapter } from "@sincpro/mobile/adapters/webview.adapter";
 import { loggerUseCases } from "@sincpro/mobile/infrastructure/logger";
 import { UIEventBus } from "@sincpro/mobile/infrastructure/ui/UIEventBus";
 import { webViewService } from "@sincpro/mobile/services/webview.service";
-import { InjectableWebView } from "@sincpro/mobile/ui/components/organisms";
+import {
+  InjectableWebView,
+  type InjectableWebViewHandle,
+} from "@sincpro/mobile/ui/components/organisms";
 import { useOdoo } from "@sincpro/mobile-odoo/entrypoints/ui/context";
-import { Feedback, useToast } from "@sincpro/mobile-ui/Feedback";
+import { Feedback } from "@sincpro/mobile-ui/Feedback";
 import { FormViewV2 } from "@sincpro/mobile-ui/views/FormViewV2";
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 import { View } from "react-native";
 import { WebViewMessageEvent } from "react-native-webview";
 
+import {
+  ODOO_PORTAL_RELOAD_EVENT,
+  type OdooPortalReloadRequest,
+} from "./odoo_portal.reload";
+
+/**
+ * Odoo inside the app. It keeps the WebView's HTTP cache: Odoo fingerprints its assets, so a
+ * visit only downloads what changed. The host reloads it with `reloadOdooPortal()`.
+ */
 export function OdooPortalScreen() {
   const { serverParams } = useOdoo();
-  const toast = useToast();
-  const [hardRefreshKey, setHardRefreshKey] = useState(0);
+  const webViewRef = useRef<InjectableWebViewHandle>(null);
 
-  useEffect(() => {
-    const handler = () => setHardRefreshKey((prev) => prev + 1);
-    UIEventBus.on("tickets:odoo:reload", handler);
-    return () => UIEventBus.off("tickets:odoo:reload", handler);
-  }, []);
+  useEffect(
+    () =>
+      UIEventBus.on<OdooPortalReloadRequest>(
+        ODOO_PORTAL_RELOAD_EVENT,
+        (request) => {
+          if (request?.clearCache) {
+            webViewRef.current?.clearCacheAndReload();
+            return;
+          }
+          webViewRef.current?.reload();
+        },
+        { debounce: false },
+      ),
+    [],
+  );
 
   if (!serverParams?.server) {
     return (
@@ -55,23 +76,21 @@ export function OdooPortalScreen() {
       );
   }
 
+  // The WebView tells the user when the portal does not load: here it is only logged.
   function handleError(error: unknown) {
     loggerUseCases.error("Error al cargar Odoo Portal:", error);
-    toast.danger("Reintentando automáticamente...", {
-      title: "Error al cargar página",
-    });
   }
 
   return (
     <View className="flex-1">
       <InjectableWebView
-        hardRefreshKey={hardRefreshKey}
+        label="Odoo"
         maxRetries={3}
         onError={handleError}
         onMessage={handleWebViewMessage}
+        ref={webViewRef}
         scripts={[WebViewAdapter.printInterceptor]}
         url={url}
-        useDefaultCache={false}
       />
     </View>
   );
