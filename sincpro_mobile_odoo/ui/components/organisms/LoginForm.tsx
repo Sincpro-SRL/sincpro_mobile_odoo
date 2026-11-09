@@ -26,7 +26,6 @@ function LoginForm({
   isLoading,
 }: LoginFormProps) {
   const fieldsDisabled = disabled || readonly;
-  const disabledProps = { disabled: fieldsDisabled };
   const inputState = {
     editable: !fieldsDisabled,
     accessibilityState: { disabled: fieldsDisabled },
@@ -70,20 +69,18 @@ function LoginForm({
           disabled={fieldsDisabled}
           name="email"
           render={({ field: { onChange, onBlur, value }, fieldState }) => (
-            <Form.InputField
-              {...disabledProps}
+            <Form.Input
+              {...inputState}
+              autoCapitalize="none"
+              autoComplete="off"
               error={fieldsDisabled ? undefined : fieldState.error?.message}
-              inputProps={{
-                ...inputState,
-                placeholder: "andru@coopebrisas.com",
-                autoCapitalize: "none",
-                autoComplete: "off",
-                importantForAutofill: "no",
-                onBlur,
-                onChangeText: onChange,
-                value,
-              }}
+              importantForAutofill="no"
               label="Usuario"
+              look="outline"
+              onBlur={onBlur}
+              onChangeText={onChange}
+              placeholder="andru@coopebrisas.com"
+              value={value}
             />
           )}
           rules={{
@@ -96,18 +93,20 @@ function LoginForm({
           disabled={fieldsDisabled}
           name="password"
           render={({ field: { onChange, onBlur, value }, fieldState }) => (
-            <Form.PasswordInput
-              {...disabledProps}
+            <Form.Input
+              {...inputState}
+              autoCapitalize="none"
+              // PasswordInput kept the password out of autofill; `secure` alone does not.
+              autoComplete="off"
               error={fieldsDisabled ? undefined : fieldState.error?.message}
-              inputProps={{
-                ...inputState,
-                placeholder: "***********",
-                onBlur,
-                autoCapitalize: "none",
-                onChangeText: onChange,
-                value,
-              }}
+              importantForAutofill="no"
               label="Contraseña"
+              look="outline"
+              onBlur={onBlur}
+              onChangeText={onChange}
+              placeholder="***********"
+              secure
+              value={value}
             />
           )}
           rules={{ required: "La contraseña es requerida" }}
@@ -119,14 +118,20 @@ function LoginForm({
       {!fieldsDisabled && (
         <>
           <View className="mb-4 justify-end items-end">
-            <TouchableOpacity onPress={onResetAccount}>
+            <TouchableOpacity
+              accessibilityRole="button"
+              onPress={onResetAccount}
+            >
               <Typography.Text underline variant="bodySmall">
                 {"¿Olvidaste tu contraseña?"}
               </Typography.Text>
             </TouchableOpacity>
           </View>
           <View className="mb-4 justify-end items-end">
-            <TouchableOpacity onPress={configureServer}>
+            <TouchableOpacity
+              accessibilityRole="button"
+              onPress={configureServer}
+            >
               <Typography.Text
                 className="text-text-secondary"
                 underline

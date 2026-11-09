@@ -16,13 +16,12 @@ function ResetAccount() {
           Ingresa tu correo para restablecer tu cuenta
         </Typography.Text>
       </View>
-      <Form.InputField
-        inputProps={{
-          placeholder: "Ingresa tu correo",
-          keyboardType: "email-address",
-          autoCapitalize: "none",
-        }}
+      <Form.Input
+        autoCapitalize="none"
+        keyboardType="email-address"
         label="Email"
+        look="outline"
+        placeholder="Ingresa tu correo"
       />
       <Actions.Button
         onPress={() => {
