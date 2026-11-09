@@ -41,8 +41,7 @@ function setup(serverParams = null) {
     },
     "@sincpro/mobile-ui/Form": {
       Form: {
-        InputField: "InputField",
-        PasswordInput: "PasswordInput",
+        Input: "Input",
         Button: "Button",
       },
     },
@@ -90,21 +89,29 @@ function node(renderer, type) {
   return matches[0];
 }
 
+// Login fields are Form.Input, told apart by their label.
+const FIELDS = ["Usuario", "Contraseña"];
+
+function field(renderer, label) {
+  const matches = nodes(renderer, "Input").filter(
+    (input) => input.props.label === label,
+  );
+  assert.equal(matches.length, 1, `Expected one ${label} input`);
+  return matches[0];
+}
+
 test("without a server, login inputs are disabled and informational; configuration is the primary action", async () => {
   const fixture = setup();
   fixture.odoo.authError = "Old authentication error";
   fixture.odoo.authIsLoading = true;
   const renderer = await mount(fixture.LoginScreen);
-  for (const type of ["InputField", "PasswordInput"]) {
-    const field = node(renderer, type);
-    assert.equal(field.props.disabled, true);
-    assert.equal(field.props.inputProps.editable, false);
-    assert.deepEqual(field.props.inputProps.accessibilityState, {
-      disabled: true,
-    });
-    assert.equal(field.props.error, undefined);
-    await act(async () => field.props.inputProps.onBlur());
-    assert.equal(node(renderer, type).props.error, undefined);
+  for (const label of FIELDS) {
+    const input = field(renderer, label);
+    assert.equal(input.props.editable, false);
+    assert.deepEqual(input.props.accessibilityState, { disabled: true });
+    assert.equal(input.props.error, undefined);
+    await act(async () => input.props.onBlur());
+    assert.equal(field(renderer, label).props.error, undefined);
   }
   const fieldGroup = nodes(renderer, "View").find(
     (view) => view.props.pointerEvents === "none",
@@ -144,10 +151,10 @@ test("server configuration saves and returns to login with enabled inputs, prese
   ]);
 
   const serverRenderer = await mount(fixture.ServerScreen, props);
-  const serverFields = nodes(serverRenderer, "InputField");
+  const serverFields = nodes(serverRenderer, "Input");
   await act(async () => {
-    serverFields[0].props.inputProps.onChangeText("https://server.invalid");
-    serverFields[1].props.inputProps.onChangeText("test");
+    serverFields[0].props.onChangeText("https://server.invalid");
+    serverFields[1].props.onChangeText("test");
   });
   await act(async () => node(serverRenderer, "Button").props.onPress());
   assert.deepEqual(fixture.odoo.setServerParams.mock.calls[0].arguments, [
@@ -159,12 +166,17 @@ test("server configuration saves and returns to login with enabled inputs, prese
     loginRenderer.render(React.createElement(fixture.LoginScreen, props)),
   );
   assert.equal(nodes(loginRenderer, "Banner").length, 0);
-  for (const type of ["InputField", "PasswordInput"]) {
-    const field = node(loginRenderer, type);
-    assert.equal(field.props.disabled, false);
-    assert.equal(field.props.inputProps.editable, true);
-    assert.equal(field.props.error, undefined);
+  for (const label of FIELDS) {
+    const input = field(loginRenderer, label);
+    assert.equal(input.props.editable, true);
+    assert.equal(input.props.look, "outline");
+    assert.equal(input.props.error, undefined);
   }
+  // The password keeps PasswordInput's behavior: hidden text and no autofill.
+  const password = field(loginRenderer, "Contraseña");
+  assert.equal(password.props.secure, true);
+  assert.equal(password.props.autoComplete, "off");
+  assert.equal(password.props.importantForAutofill, "no");
   assert.equal(node(loginRenderer, "Button").props.title, "Ingresar");
   const links = nodes(loginRenderer, "TouchableOpacity");
   await act(async () => {
@@ -182,22 +194,20 @@ test("server configuration saves and returns to login with enabled inputs, prese
 test("required errors appear only after touching each field and revalidate on change", async () => {
   const fixture = setup({ server: "https://server.invalid", database: "test" });
   const renderer = await mount(fixture.LoginScreen);
-  const email = () => node(renderer, "InputField");
-  const password = () => node(renderer, "PasswordInput");
+  const email = () => field(renderer, "Usuario");
+  const password = () => field(renderer, "Contraseña");
   assert.equal(email().props.error, undefined);
   assert.equal(password().props.error, undefined);
-  await act(async () => email().props.inputProps.onChangeText(""));
+  await act(async () => email().props.onChangeText(""));
   assert.equal(email().props.error, undefined);
-  await act(async () => email().props.inputProps.onBlur());
+  await act(async () => email().props.onBlur());
   assert.equal(email().props.error, "El correo es requerido");
   assert.equal(password().props.error, undefined);
-  await act(async () => email().props.inputProps.onChangeText("test-user"));
+  await act(async () => email().props.onChangeText("test-user"));
   assert.equal(email().props.error, undefined);
-  await act(async () => password().props.inputProps.onBlur());
+  await act(async () => password().props.onBlur());
   assert.equal(password().props.error, "La contraseña es requerida");
-  await act(async () =>
-    password().props.inputProps.onChangeText("test-password"),
-  );
+  await act(async () => password().props.onChangeText("test-password"));
   assert.equal(password().props.error, undefined);
   await act(async () => node(renderer, "Button").props.onPress());
   assert.deepEqual(fixture.odoo.login.mock.calls[0].arguments, [
@@ -211,11 +221,11 @@ test("submitting an untouched configured form validates both fields without logg
   const renderer = await mount(fixture.LoginScreen);
   await act(async () => node(renderer, "Button").props.onPress());
   assert.equal(
-    node(renderer, "InputField").props.error,
+    field(renderer, "Usuario").props.error,
     "El correo es requerido",
   );
   assert.equal(
-    node(renderer, "PasswordInput").props.error,
+    field(renderer, "Contraseña").props.error,
     "La contraseña es requerida",
   );
   assert.equal(fixture.odoo.login.mock.callCount(), 0);
@@ -244,8 +254,8 @@ test("the legacy readonly prop remains compatible and uses the disabled configur
     onResetAccount: mock.fn(),
     configureServer,
   });
-  assert.equal(node(renderer, "InputField").props.disabled, true);
-  assert.equal(node(renderer, "PasswordInput").props.disabled, true);
+  assert.equal(field(renderer, "Usuario").props.editable, false);
+  assert.equal(field(renderer, "Contraseña").props.editable, false);
   await act(async () => node(renderer, "Button").props.onPress());
   assert.equal(configureServer.mock.callCount(), 1);
 });

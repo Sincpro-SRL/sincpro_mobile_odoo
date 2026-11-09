@@ -88,7 +88,10 @@ function loadEventBus(fixture) {
     },
     "../../exceptions": exceptions,
     "../../infrastructure/event_chain": { runWithChain: mock.fn() },
-    "../../infrastructure/logger": { loggerQueueProcessor: logger },
+    "../../infrastructure/logger": {
+      isConsoleDebug: () => false,
+      loggerQueueProcessor: logger,
+    },
     "../../infrastructure/ui/activity": {
       declaresUi: mock.fn(),
       publishActivity: mock.fn(),
@@ -96,6 +99,9 @@ function loadEventBus(fixture) {
     "../../infrastructure/ui/UIEventBus": {
       UIEventBus: { emit: fixture.emit },
     },
+    // Since mobile 1.2.0 the EventBus pauses polling in the background through AppState;
+    // without AppState it skips that listener, which these tests do not exercise.
+    "react-native": {},
   })("node_modules/@sincpro/mobile/dist/infrastructure/workers/EventBus.js")
     .EventBus;
 }

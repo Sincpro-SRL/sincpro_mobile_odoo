@@ -1,3 +1,4 @@
+import { EApplicationLogger } from "@sincpro/mobile/infrastructure/logger";
 import { getUserInitials } from "@sincpro/mobile/tools/utils/Initials";
 import { Display } from "@sincpro/mobile-ui/Display";
 import { useToast } from "@sincpro/mobile-ui/Feedback";
@@ -12,12 +13,57 @@ import { Switch, TouchableOpacity, View } from "react-native";
 
 import { ProfileProvider, useProfile } from "./profile.context";
 
+const LOGGER_ROWS: {
+  context: EApplicationLogger;
+  label: string;
+  description: string;
+}[] = [
+  {
+    context: EApplicationLogger.USE_CASES,
+    label: "Casos de uso",
+    description: "Servicios y workflows",
+  },
+  {
+    context: EApplicationLogger.QUEUE_PROCESSOR,
+    label: "Cola / EventBus",
+    description: "Procesamiento de eventos",
+  },
+  {
+    context: EApplicationLogger.CRON_JOBS,
+    label: "Crons",
+    description: "Trabajos programados",
+  },
+  {
+    context: EApplicationLogger.ODOO_CLIENT,
+    label: "Cliente Odoo",
+    description: "HTTP y sesión Odoo (ruidoso)",
+  },
+  {
+    context: EApplicationLogger.ADAPTER,
+    label: "Adapters",
+    description: "Puertos de infraestructura",
+  },
+  {
+    context: EApplicationLogger.REPOSITORIES,
+    label: "Repositorios",
+    description: "Lectura/escritura DB",
+  },
+  {
+    context: EApplicationLogger.GLOBAL,
+    label: "Global",
+    description: "Logger sin contexto",
+  },
+];
+
 function ProfileScreenContent() {
   const theme = useTheme();
   const {
     session,
     authIsLoading,
     debugMode,
+    loggerContexts,
+    setLoggerContextEnabled,
+    resetLoggerContexts,
     handleLogout,
     handleSettings,
     handleDatabase,
@@ -170,33 +216,66 @@ function ProfileScreenContent() {
             icon={SettingsIcon}
             label="Ajustes"
             onPress={handleSettings}
-            showDivider={!!debugMode}
           />
-          {debugMode && (
-            <Display.MenuButton
-              icon={SettingsIcon}
-              label="Modo Debug"
-              rightComponent={
-                <Switch
-                  onValueChange={toggleDebugMode}
-                  style={{ transform: [{ scale: 0.85 }] }}
-                  thumbColor={theme.bg.card}
-                  trackColor={{ false: theme.bg.muted, true: theme.accent }}
-                  value={debugMode}
-                />
-              }
-            />
-          )}
+          <Display.MenuButton
+            icon={SettingsIcon}
+            label="Modo Debug"
+            rightComponent={
+              <Switch
+                onValueChange={() => {
+                  void toggleDebugMode();
+                }}
+                style={{ transform: [{ scale: 0.85 }] }}
+                thumbColor={theme.bg.card}
+                trackColor={{ false: theme.bg.muted, true: theme.accent }}
+                value={debugMode}
+              />
+            }
+            showDivider={debugMode}
+          />
           {debugMode && (
             <Display.MenuButton
               description="Explorar datos locales"
               icon={BoxIcon}
               label="Ver base de datos"
               onPress={handleDatabase}
-              showDivider={false}
             />
           )}
         </FormViewV2.Content.Section>
+
+        {debugMode ? (
+          <FormViewV2.Content.Section title="Loggers">
+            {LOGGER_ROWS.map((row) => (
+              <Display.MenuButton
+                description={row.description}
+                icon={SettingsIcon}
+                key={row.context}
+                label={row.label}
+                rightComponent={
+                  <Switch
+                    onValueChange={(enabled) => {
+                      void setLoggerContextEnabled(row.context, enabled);
+                    }}
+                    style={{ transform: [{ scale: 0.85 }] }}
+                    thumbColor={theme.bg.card}
+                    trackColor={{ false: theme.bg.muted, true: theme.accent }}
+                    value={loggerContexts[row.context]}
+                  />
+                }
+                showDivider
+              />
+            ))}
+            <Display.MenuButton
+              description="Volver a la máscara empaquetada"
+              icon={SettingsIcon}
+              label="Restablecer loggers"
+              onPress={() => {
+                void resetLoggerContexts();
+              }}
+              showDivider={false}
+            />
+          </FormViewV2.Content.Section>
+        ) : null}
 
         {/* Logout — always at the bottom, always separate */}
         <Display.Card className="mx-4" elevation="none" padding="none">
@@ -266,7 +345,12 @@ function DevModeActivator({
   }
 
   return (
-    <TouchableOpacity activeOpacity={0.9} onPress={handleTap}>
+    // A hidden multi-tap (debug mode), not a control: the content stays reachable as is.
+    <TouchableOpacity
+      accessible={false}
+      activeOpacity={0.9}
+      onPress={handleTap}
+    >
       {children}
     </TouchableOpacity>
   );

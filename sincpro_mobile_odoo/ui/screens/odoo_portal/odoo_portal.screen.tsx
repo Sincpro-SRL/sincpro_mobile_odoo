@@ -1,8 +1,8 @@
 import { WebViewAdapter } from "@sincpro/mobile/adapters/webview.adapter";
-import { WebViewMessageReceivedEvent } from "@sincpro/mobile/domain/webview/events";
 import { loggerUseCases } from "@sincpro/mobile/infrastructure/logger";
 import { UIEventBus } from "@sincpro/mobile/infrastructure/ui/UIEventBus";
-import { EventBus } from "@sincpro/mobile/infrastructure/workers";
+import { printerService } from "@sincpro/mobile/services/printer.service";
+import { webViewService } from "@sincpro/mobile/services/webview.service";
 import { InjectableWebView } from "@sincpro/mobile/ui/components/organisms";
 import { useOdoo } from "@sincpro/mobile-odoo/entrypoints/ui/context";
 import { Feedback, useToast } from "@sincpro/mobile-ui/Feedback";
@@ -45,13 +45,15 @@ export function OdooPortalScreen() {
 
   function handleWebViewMessage(event: WebViewMessageEvent) {
     const rawData = event.nativeEvent.data;
+    const parsed = webViewService.parseMessage(rawData);
+    if (!parsed || !webViewService.isPrintImage(parsed)) return;
 
-    EventBus.publish(
-      WebViewMessageReceivedEvent.create({
-        raw: rawData,
-        source: url,
-      }),
-    );
+    void printerService.enqueuePrintImage({
+      imageBase64: parsed.image,
+      width: parsed.width,
+      height: parsed.height,
+      title: parsed.metadata.title,
+    });
   }
 
   function handleError(error: unknown) {

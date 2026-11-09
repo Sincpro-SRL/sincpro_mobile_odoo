@@ -1,4 +1,6 @@
 import { useNavigation } from "@react-navigation/native";
+import { useCommon } from "@sincpro/mobile/entrypoints/ui/common_provider";
+import type { EApplicationLogger } from "@sincpro/mobile/infrastructure/logger";
 import { OdooScreen } from "@sincpro/mobile-odoo/entrypoints/ui/AppScreen";
 import { useOdoo } from "@sincpro/mobile-odoo/entrypoints/ui/context";
 import { useConfirmationContext } from "@sincpro/mobile-ui/Dialog/Confirmation.context";
@@ -8,19 +10,24 @@ import {
   useCallback,
   useContext,
   useMemo,
-  useState,
 } from "react";
 
 interface IProfileContext {
   session: ReturnType<typeof useOdoo>["session"];
   authIsLoading: boolean;
   debugMode: boolean;
+  loggerContexts: Record<EApplicationLogger, boolean>;
+  setLoggerContextEnabled: (
+    context: EApplicationLogger,
+    enabled: boolean,
+  ) => Promise<void>;
+  resetLoggerContexts: () => Promise<void>;
   handleLogout: () => void;
   handleSettings: () => void;
   handleDatabase: () => void;
   handleAssignedEquipment: () => void;
   handleBack: () => void;
-  toggleDebugMode: () => void;
+  toggleDebugMode: () => Promise<void>;
 }
 
 const ProfileContext = createContext<IProfileContext | null>(null);
@@ -37,11 +44,13 @@ export function ProfileProvider({
   const navigation = useNavigation();
   const { show } = useConfirmationContext();
   const { session, authIsLoading, logout } = useOdoo();
-  const [debugMode, setDebugMode] = useState(false);
-
-  const toggleDebugMode = useCallback(() => {
-    setDebugMode((value) => !value);
-  }, []);
+  const {
+    debugMode,
+    toggleDebugMode,
+    loggerContexts,
+    setLoggerContextEnabled,
+    resetLoggerContexts,
+  } = useCommon();
 
   const handleLogout = useCallback(() => {
     show({
@@ -78,6 +87,9 @@ export function ProfileProvider({
       session,
       authIsLoading,
       debugMode,
+      loggerContexts,
+      setLoggerContextEnabled,
+      resetLoggerContexts,
       handleLogout,
       handleSettings,
       handleDatabase,
@@ -89,6 +101,9 @@ export function ProfileProvider({
       session,
       authIsLoading,
       debugMode,
+      loggerContexts,
+      setLoggerContextEnabled,
+      resetLoggerContexts,
       handleLogout,
       handleSettings,
       handleDatabase,
