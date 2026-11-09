@@ -629,10 +629,10 @@
   resolved "https://registry.yarnpkg.com/@sincpro/criteria/-/criteria-2.1.0.tgz#9d1d56e78e7bb76f9e15a5a1c3c5684e254860d7"
   integrity sha512-rXOCC5MxYTZ1JYiJ++8EJFvkYpMRMZl4JQ9PNgqzYa/StsZjGJsK7mnQAqdJb2TfHuwUys8gMxj9wp4fEZN5ZQ==
 
-"@sincpro/mobile-ui@^3.4.0":
-  version "3.4.0"
-  resolved "https://registry.yarnpkg.com/@sincpro/mobile-ui/-/mobile-ui-3.4.0.tgz#754554ec3a42c82393a342eb2e05c93b0af40be1"
-  integrity sha512-56K0748eAF/dNwWaZSAW/C8IDnMgCfRjUewEI2Yv4LwMVGKRHcM+oZSqhQBQd9q8vZ69ZiVwkXXZR2tF4XpolQ==
+"@sincpro/mobile-ui@^3.4.1":
+  version "3.4.1"
+  resolved "https://registry.yarnpkg.com/@sincpro/mobile-ui/-/mobile-ui-3.4.1.tgz#58a7ef0c2e062474b1fefdf843e3e4faacf0f155"
+  integrity sha512-UqiS7wAmkluj3Fp2t+SONxj3lon6v6sZPXYdxe0UxYmXP8Qbudm/xOVl5aGDHezPKuazhkKr2AOjVJYzzWJvbg==
   dependencies:
     "@babel/runtime" "^7.29.13"
     big.js "^7.0.1"
@@ -641,10 +641,10 @@
     tailwind-merge "^3.4.0"
     tailwind-variants "^3.2.2"
 
-"@sincpro/mobile@^1.3.1":
-  version "1.3.1"
-  resolved "https://registry.yarnpkg.com/@sincpro/mobile/-/mobile-1.3.1.tgz#51bf8430898868955c672a25aa824bbae9be8e2e"
-  integrity sha512-onberCOdeqZJ9xi/RNo+m50Vqr8n6Ffg+8okeTXNDjuvlX9mTY6KDfUk4RweeA0Qi9ASJrUysOoadLQJsxlqMA==
+"@sincpro/mobile@^1.5.0":
+  version "1.5.0"
+  resolved "https://registry.yarnpkg.com/@sincpro/mobile/-/mobile-1.5.0.tgz#31656947fd7834df1085b6733bb24e424eec3d1d"
+  integrity sha512-Av0noLPqixjMflxjagusyt6h3eIrubvbp3rP9KWepx97UL41Eoal6gkvVizdCvPmI9ed1h23WMyIfEp0XwJVMg==
   dependencies:
     "@opentelemetry/api" "^1.9.1"
     "@opentelemetry/core" "^2.10.0"
