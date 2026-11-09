@@ -99,6 +99,11 @@ function loadEventBus(fixture) {
     "../../infrastructure/ui/UIEventBus": {
       UIEventBus: { emit: fixture.emit },
     },
+    // Since mobile 1.3.0 every subscriber runs inside the app's interceptors; with none
+    // registered it runs as is.
+    "../../infrastructure/workers/interceptors": {
+      runIntercepted: (_event, _subscriber, handler) => handler(),
+    },
     // Since mobile 1.2.0 the EventBus pauses polling in the background through AppState;
     // without AppState it skips that listener, which these tests do not exercise.
     "react-native": {},
