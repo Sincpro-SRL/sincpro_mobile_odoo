@@ -104,7 +104,11 @@ function ProfileScreenContent() {
           padding="none"
         >
           {/* Hero: avatar + name + email + role. DevModeActivator wraps only this zone. */}
-          <DevModeActivator onActivate={toggleDebugMode}>
+          <DevModeActivator
+            onActivate={() => {
+              if (!debugMode) void toggleDebugMode();
+            }}
+          >
             <View className="flex-row items-center p-4 gap-3">
               <Display.Avatar initials={initials} size={52} />
               <View className="flex-1 gap-0.5">
@@ -216,23 +220,28 @@ function ProfileScreenContent() {
             icon={SettingsIcon}
             label="Ajustes"
             onPress={handleSettings}
-          />
-          <Display.MenuButton
-            icon={SettingsIcon}
-            label="Modo Debug"
-            rightComponent={
-              <Switch
-                onValueChange={() => {
-                  void toggleDebugMode();
-                }}
-                style={{ transform: [{ scale: 0.85 }] }}
-                thumbColor={theme.bg.card}
-                trackColor={{ false: theme.bg.muted, true: theme.accent }}
-                value={debugMode}
-              />
-            }
             showDivider={debugMode}
           />
+          {/* Debug mode stays hidden: it opens the event history, where prints can be sent
+              again. It turns on with 6 taps on the profile card; the switch only turns it off. */}
+          {debugMode && (
+            <Display.MenuButton
+              icon={SettingsIcon}
+              label="Modo Debug"
+              rightComponent={
+                <Switch
+                  onValueChange={() => {
+                    void toggleDebugMode();
+                  }}
+                  style={{ transform: [{ scale: 0.85 }] }}
+                  thumbColor={theme.bg.card}
+                  trackColor={{ false: theme.bg.muted, true: theme.accent }}
+                  value={debugMode}
+                />
+              }
+              showDivider
+            />
+          )}
           {debugMode && (
             <Display.MenuButton
               description="Explorar datos locales"
