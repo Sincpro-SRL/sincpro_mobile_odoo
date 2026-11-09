@@ -1,7 +1,6 @@
 import { WebViewAdapter } from "@sincpro/mobile/adapters/webview.adapter";
 import { loggerUseCases } from "@sincpro/mobile/infrastructure/logger";
 import { UIEventBus } from "@sincpro/mobile/infrastructure/ui/UIEventBus";
-import { printerService } from "@sincpro/mobile/services/printer.service";
 import { webViewService } from "@sincpro/mobile/services/webview.service";
 import { InjectableWebView } from "@sincpro/mobile/ui/components/organisms";
 import { useOdoo } from "@sincpro/mobile-odoo/entrypoints/ui/context";
@@ -43,17 +42,17 @@ export function OdooPortalScreen() {
     ? serverParams.server
     : `https://${serverParams.server}`;
 
+  // The framework owns the whole print cycle (started, image, failed), so a print from the
+  // portal always shows as a process or as an error with a way to the printer screen.
   function handleWebViewMessage(event: WebViewMessageEvent) {
-    const rawData = event.nativeEvent.data;
-    const parsed = webViewService.parseMessage(rawData);
-    if (!parsed || !webViewService.isPrintImage(parsed)) return;
-
-    void printerService.enqueuePrintImage({
-      imageBase64: parsed.image,
-      width: parsed.width,
-      height: parsed.height,
-      title: parsed.metadata.title,
-    });
+    webViewService
+      .handleMessage(event.nativeEvent.data)
+      .catch((error: unknown) =>
+        loggerUseCases.error(
+          "Error al procesar la impresión del portal",
+          error,
+        ),
+      );
   }
 
   function handleError(error: unknown) {
