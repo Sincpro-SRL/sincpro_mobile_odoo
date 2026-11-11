@@ -1,3 +1,6 @@
+// Odoo's event handlers register on odooBoundedContext when this loads.
+import "@sincpro/mobile-odoo/entrypoints/queue";
+
 import type { HearingContext } from "@sincpro/client-framework";
 import type { IMigration } from "@sincpro/mobile/domain/database";
 import { DomainModule } from "@sincpro/mobile/framework/domain_module";
@@ -22,7 +25,7 @@ export class OdooModule extends DomainModule {
     return OdooMigrations;
   }
 
-  /** Its use cases — `ForgetOdooUser` is registered for `OdooLoggedOutEvent`: it hears it. */
+  /** Its use cases and its event handlers: `OnOdooLoggedOut` hears `OdooLoggedOutEvent`. */
   override boundedContexts(): readonly HearingContext[] {
     return [odooBoundedContext];
   }

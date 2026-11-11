@@ -16,7 +16,7 @@ export class CommandLogout extends Command<void> {}
  * 1. The app's session ends: its queue and crons stop and the local data is cleaned; the server
  *    configuration is kept.
  * Final: `OdooLoggedOutEvent` tells the app — and Odoo's client forgets the user when it arrives
- *    (`ForgetOdooUser`).
+ *    (`OnOdooLoggedOut` executes `CommandForgetOdooUser`).
  */
 @odooBoundedContext.feature(CommandLogout)
 export class Logout extends Feature<CommandLogout, void> {

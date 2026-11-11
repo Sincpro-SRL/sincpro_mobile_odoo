@@ -4,6 +4,7 @@ const { beforeEach, test } = require("node:test");
 const {
   BoundedContext,
   configureProcess,
+  EventHandler,
   Feature,
   Subscriber,
   valuesOf,
@@ -61,6 +62,7 @@ function odooWith({ keptSession = null } = {}) {
   const load = createSourceLoader({
     "@sincpro/mobile-odoo/infrastructure/framework": {
       Feature,
+      EventHandler,
       odooBoundedContext,
     },
     "@sincpro/mobile/domain/events": {
@@ -116,33 +118,34 @@ test("signing out ends the app's session, keeps the server and tells the app", a
   );
 });
 
-test("the use case of OdooLoggedOut is heard by the queue and forgets the user, twice the same", async () => {
+test("OdooLoggedOut reaches its handler, which has Odoo's client forget the user — twice the same", async () => {
   const odoo = odooWith();
-  odoo.load("sincpro_mobile_odoo/services/session/forget_odoo_user.feature.ts");
+  odoo.load("sincpro_mobile_odoo/entrypoints/queue/logged_out.handler.ts");
   const { OdooLoggedOutEvent } = odoo.load(
     "sincpro_mobile_odoo/domain/auth/events.ts",
   );
-  const subscriber = new Subscriber(odoo.odooBoundedContext);
+  const subscriber = new Subscriber("test").addBus(odoo.odooBoundedContext);
   assert.equal(
     subscriber.eventTypeOf("odoo.auth.v2.logged_out"),
     OdooLoggedOutEvent,
   );
 
   const event = Object.assign(new OdooLoggedOutEvent(), { uid: 7 });
-  await subscriber.handle(event);
+  const [handled] = await subscriber.handle(event);
+  assert.equal(handled.boundedContext, "odoo/OnOdooLoggedOut");
   await subscriber.handle(event);
   assert.deepEqual(odoo.calls, ["cleanCredentials", "cleanCredentials"]);
 });
 
 test("a logout that arrives after someone signed in again forgets nobody", async () => {
   const odoo = odooWith({ keptSession: { uid: 8 } });
-  odoo.load("sincpro_mobile_odoo/services/session/forget_odoo_user.feature.ts");
+  odoo.load("sincpro_mobile_odoo/entrypoints/queue/logged_out.handler.ts");
   const { OdooLoggedOutEvent } = odoo.load(
     "sincpro_mobile_odoo/domain/auth/events.ts",
   );
-  const [handled] = await new Subscriber(odoo.odooBoundedContext).handle(
-    Object.assign(new OdooLoggedOutEvent(), { uid: 7 }),
-  );
+  const [handled] = await new Subscriber("test")
+    .addBus(odoo.odooBoundedContext)
+    .handle(Object.assign(new OdooLoggedOutEvent(), { uid: 7 }));
   assert.ok(!("error" in handled));
   assert.deepEqual(odoo.calls, []);
 });

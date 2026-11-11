@@ -40,10 +40,12 @@ export default createAppShell({
   - sesión: `CommandLogin`, `CommandLogout`, `CommandRestoreSession`
     (`await odooBoundedContext.execute(new CommandLogin(user, password))`);
   - servidor: `CommandSaveServer`, `CommandServerParams`, `CommandDeleteServer`;
-  - `ForgetOdooUser`, registrado para `OdooLoggedOutEvent`: el cliente olvida al usuario.
+  - `CommandForgetOdooUser`: el cliente olvida al usuario. Lo ejecuta el event handler
+    `OnOdooLoggedOut` (`entrypoints/queue/`) cuando llega `OdooLoggedOutEvent`.
 - `OdooLoggedInEvent` (`odoo.auth.v3.logged_in`, sin contraseña) y `OdooLoggedOutEvent`
   (`odoo.auth.v2.logged_out`, no espera sesión): una app los escucha registrando un caso de uso
-  para el evento (`@ticketsBoundedContext.feature(OdooLoggedInEvent)`).
+  para el evento (`@ticketsBoundedContext.feature([CommandX, OdooLoggedInEvent])`) o un event
+  handler (`@ticketsBoundedContext.handler([OdooLoggedInEvent])`).
 - `getOdooClient()` — cliente Odoo (JSON-RPC y HTTP). Cada error declara su tipo de falla:
   `UserError` → `domain`, `ValidationError` → `invalid`, `AccessDenied` → `unauthenticated`,
   `AccessError` → `permission_denied`, `MissingError` → `not_found`, otro código JSON-RPC →

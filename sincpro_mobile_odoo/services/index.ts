@@ -12,7 +12,10 @@ export {
   SaveServer,
   ServerParams,
 } from "@sincpro/mobile-odoo/services/server/server.feature";
-export { ForgetOdooUser } from "@sincpro/mobile-odoo/services/session/forget_odoo_user.feature";
+export {
+  CommandForgetOdooUser,
+  ForgetOdooUser,
+} from "@sincpro/mobile-odoo/services/session/forget_odoo_user.feature";
 export {
   CommandLogin,
   Login,
