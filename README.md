@@ -17,19 +17,19 @@ Depende de `@sincpro/mobile` (core) y `@sincpro/mobile-ui` (design system).
 Registra el `odooModule` al instanciar la app:
 
 ```ts
-import { createAppShell, createTheme } from "@sincpro/mobile";
+import { createTheme, defineAppShell } from "@sincpro/mobile";
 import { odooModule, OdooProvider } from "@sincpro/mobile-odoo";
 
-export default createAppShell({
+export const shell = defineAppShell({
   theme: createTheme({ primary: "#714B67" }),
   domains: [odooModule /* ...tus dominios */],
-  ui: {
-    /* ... */
-  },
-  activeDomain: "...",
   providers: [OdooProvider],
 });
 ```
+
+Pide `@sincpro/mobile` 2.2 o superior: cada operación del core es un Command de
+`commonBoundedContext` y el portal entrega los mensajes de la página a sus handlers
+(`dispatchWebViewMessage`), así que el ciclo de impresión corre como Commands, con su span.
 
 ## API
 
@@ -40,6 +40,8 @@ export default createAppShell({
   - sesión: `CommandLogin`, `CommandLogout`, `CommandRestoreSession`
     (`await odooBoundedContext.execute(new CommandLogin(user, password))`);
   - servidor: `CommandSaveServer`, `CommandServerParams`, `CommandDeleteServer`;
+  - un archivo por caso de uso en `services/<agregado>/`; lo que comparten los de una carpeta
+    va en su `common.ts` (`services/session/common.ts`);
   - `CommandForgetOdooUser`: el cliente olvida al usuario. Lo ejecuta el event handler
     `OnOdooLoggedOut` (`entrypoints/queue/`) cuando llega `OdooLoggedOutEvent`.
 - `OdooLoggedInEvent` (`odoo.auth.v3.logged_in`, sin contraseña) y `OdooLoggedOutEvent`

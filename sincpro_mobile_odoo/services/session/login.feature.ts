@@ -8,6 +8,7 @@ import {
   Feature,
   odooBoundedContext,
 } from "@sincpro/mobile-odoo/infrastructure/framework";
+import { pointAtSavedServer } from "@sincpro/mobile-odoo/services/session/common";
 
 export class CommandLogin extends Command<OdooSession> {
   constructor(
@@ -32,8 +33,7 @@ export class CommandLogin extends Command<OdooSession> {
 @odooBoundedContext.feature(CommandLogin)
 export class Login extends Feature<CommandLogin, OdooSession> {
   async execute(command: CommandLogin): Promise<OdooSession> {
-    const server = await this.servers.find();
-    if (server) this.odoo.setServer(server);
+    await pointAtSavedServer(this.servers, this.odoo);
 
     const uid = await this.accounts.login(command.user, command.password);
     const profile = await this.profiles.getProfile(uid);
@@ -64,6 +64,7 @@ export class Login extends Feature<CommandLogin, OdooSession> {
       lang: profile.lang,
     });
     await this.sessions.save(session);
+    this.span.set({ "odoo.uid": uid, "odoo.company_id": session.companyId });
     this.logger.info("Signed in to Odoo", {
       uid,
       company_id: session.companyId,

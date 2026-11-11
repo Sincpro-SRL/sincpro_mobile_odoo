@@ -4,6 +4,7 @@ import {
   Feature,
   odooBoundedContext,
 } from "@sincpro/mobile-odoo/infrastructure/framework";
+import { pointAtSavedServer } from "@sincpro/mobile-odoo/services/session/common";
 
 export class CommandRestoreSession extends Command<OdooSession | null> {}
 
@@ -22,8 +23,7 @@ export class RestoreSession extends Feature<
   async execute(): Promise<OdooSession | null> {
     const session = await this.sessions.findById(OdooSession.UUID);
     if (!this.odoo.isConfigured) {
-      const server = await this.servers.find();
-      if (server) this.odoo.setServer(server);
+      await pointAtSavedServer(this.servers, this.odoo);
       if (session) {
         this.odoo.setUser(session.user, session.password);
         this.odoo.setUserContext(
@@ -33,6 +33,7 @@ export class RestoreSession extends Feature<
         );
       }
     }
+    this.span.set({ "odoo.session_kept": session !== null });
     if (!session) {
       this.logger.info("No Odoo session kept");
       return null;

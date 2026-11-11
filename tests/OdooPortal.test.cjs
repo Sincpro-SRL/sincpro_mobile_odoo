@@ -30,6 +30,11 @@ test("the library listens to its own reload event, not one named after a host", 
   assert.match(screen, /webViewRef\.current\?\.reload\(\);/);
 });
 
+test("a page's message goes to the framework's handlers: its print cycle runs as Commands", () => {
+  assert.match(screen, /dispatchWebViewMessage\(event\.nativeEvent\.data\)/);
+  assert.doesNotMatch(screen, /webViewService/);
+});
+
 test("the portal leaves the failure toast to the WebView", () => {
   assert.doesNotMatch(screen, /useToast/);
   assert.doesNotMatch(screen, /Reintentando automáticamente/);
