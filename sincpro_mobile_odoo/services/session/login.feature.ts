@@ -1,6 +1,7 @@
 import { Command } from "@sincpro/client-framework";
 import { newEvent } from "@sincpro/mobile/domain/events";
 import {
+  type IUserProfileDTO,
   OdooLoggedInEvent,
   OdooSession,
 } from "@sincpro/mobile-odoo/domain/auth";
@@ -8,7 +9,6 @@ import {
   Feature,
   odooBoundedContext,
 } from "@sincpro/mobile-odoo/infrastructure/framework";
-import { pointAtSavedServer } from "@sincpro/mobile-odoo/services/session/common";
 
 export class CommandLogin extends Command<OdooSession> {
   constructor(
@@ -33,7 +33,8 @@ export class CommandLogin extends Command<OdooSession> {
 @odooBoundedContext.feature(CommandLogin)
 export class Login extends Feature<CommandLogin, OdooSession> {
   async execute(command: CommandLogin): Promise<OdooSession> {
-    await pointAtSavedServer(this.servers, this.odoo);
+    const server = await this.servers.find();
+    if (server) this.odoo.setServer(server);
 
     const uid = await this.accounts.login(command.user, command.password);
     const profile = await this.profiles.getProfile(uid);
@@ -43,6 +44,24 @@ export class Login extends Feature<CommandLogin, OdooSession> {
       profile.lang || false,
     );
 
+    const session = await this.keepSession(command, uid, profile);
+    this.span.set({ "odoo.uid": uid, "odoo.company_id": session.companyId });
+    this.logger.info("Signed in to Odoo", {
+      uid,
+      company_id: session.companyId,
+    });
+
+    await this.appSession.authenticateSession();
+    await this.announce(session);
+    return session;
+  }
+
+  /** The session kept on the phone — with the password, to sign in again when Odoo's expires. */
+  private async keepSession(
+    command: CommandLogin,
+    uid: number,
+    profile: IUserProfileDTO,
+  ): Promise<OdooSession> {
     const session = OdooSession.obj<OdooSession>({
       uid,
       db: this.odoo.database!,
@@ -64,13 +83,11 @@ export class Login extends Feature<CommandLogin, OdooSession> {
       lang: profile.lang,
     });
     await this.sessions.save(session);
-    this.span.set({ "odoo.uid": uid, "odoo.company_id": session.companyId });
-    this.logger.info("Signed in to Odoo", {
-      uid,
-      company_id: session.companyId,
-    });
+    return session;
+  }
 
-    await this.appSession.authenticateSession();
+  /** Tells the app who signed in — never the password. */
+  private async announce(session: OdooSession): Promise<void> {
     await this.publisher.publish(
       newEvent(OdooLoggedInEvent, {
         uid: session.uid,
@@ -82,6 +99,5 @@ export class Login extends Feature<CommandLogin, OdooSession> {
         companyIds: session.companyIds,
       }),
     );
-    return session;
   }
 }

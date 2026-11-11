@@ -40,8 +40,8 @@ Pide `@sincpro/mobile` 2.2 o superior: cada operación del core es un Command de
   - sesión: `CommandLogin`, `CommandLogout`, `CommandRestoreSession`
     (`await odooBoundedContext.execute(new CommandLogin(user, password))`);
   - servidor: `CommandSaveServer`, `CommandServerParams`, `CommandDeleteServer`;
-  - un archivo por caso de uso en `services/<agregado>/`; lo que comparten los de una carpeta
-    va en su `common.ts` (`services/session/common.ts`);
+  - un archivo por caso de uso en `services/<agregado>/`, desglosado en métodos privados que
+    llama su `execute`; cada uno usa sus dependencias de forma explícita (`this.servers.find()`);
   - `CommandForgetOdooUser`: el cliente olvida al usuario. Lo ejecuta el event handler
     `OnOdooLoggedOut` (`entrypoints/queue/`) cuando llega `OdooLoggedOutEvent`.
 - `OdooLoggedInEvent` (`odoo.auth.v3.logged_in`, sin contraseña) y `OdooLoggedOutEvent`

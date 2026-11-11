@@ -31,6 +31,17 @@ test("services holds only use cases, one per file; what a folder shares is its c
   }
 });
 
+test("a common.ts holds pure application helpers — never a dependency", () => {
+  for (const file of sources("services")) {
+    if (path.basename(file) !== "common.ts") continue;
+    assert.doesNotMatch(
+      read(file),
+      /async function|infrastructure\/|adapters\//,
+      `${file}: what a use case does with its dependencies is written in the use case`,
+    );
+  }
+});
+
 test("nothing uses what @sincpro/mobile 2.2 removed", () => {
   const removed =
     /services\/(printer|bluetooth|network|event|database_table|webview)\.service|framework\/replaceable|\bNetworkAdapter\.getStatus/;
