@@ -624,6 +624,11 @@
   resolved "https://registry.yarnpkg.com/@sincpro/client-framework/-/client-framework-0.6.0.tgz#c0fe03b472b20e11e9d9328c560886311ee61767"
   integrity sha512-3mbMqsiIdMV9uu+7TGKq72+iO20GiNsPzLrC6wI2+CjdCqCS+U3V4qGRKeIZfpgq4YzBGr63zocerx/N1J3Qww==
 
+"@sincpro/client-framework@^1.3.0":
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/@sincpro/client-framework/-/client-framework-1.3.0.tgz#8ef33b9bf9c8f480d4a01528aeaa68d5c56c2b09"
+  integrity sha512-0+pdrZp9ImzVopqhr0mWeyzp/GMwuor9oCSDuAWLEfPO0QN2Y4EycZtvYmAJFMgPY71a/MUO5V6Q4BiD+fltfw==
+
 "@sincpro/criteria@^2.1.0":
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/@sincpro/criteria/-/criteria-2.1.0.tgz#9d1d56e78e7bb76f9e15a5a1c3c5684e254860d7"

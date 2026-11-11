@@ -1,10 +1,10 @@
+import { loggerAdapter } from "@sincpro/client-framework";
 import {
   type DocumentCriteria,
   rowsMatching,
 } from "@sincpro/mobile/domain/database";
 import { EntityCollection } from "@sincpro/mobile/domain/entity";
 import { DBCursor } from "@sincpro/mobile/infrastructure/database";
-import logger from "@sincpro/mobile/infrastructure/logger";
 import { EOdooRepository } from "@sincpro/mobile-odoo/domain/repository";
 import { IServer } from "@sincpro/mobile-odoo/domain/server";
 import { DATABASE_TABLES } from "@sincpro/mobile-odoo/entrypoints/db/migrations";
@@ -13,14 +13,14 @@ class ServerRepositoryImpl {
   public readonly name = EOdooRepository.SERVER;
   public readonly table = DATABASE_TABLES.SERVERS;
   async update(server: IServer): Promise<void> {
-    logger.debug("Updating singleton server");
+    loggerAdapter.debug("Updating singleton server");
     await DBCursor.mutateDatabase(`DELETE FROM ${DATABASE_TABLES.SERVERS}`);
     await DBCursor.mutateDatabase(
       `INSERT INTO ${DATABASE_TABLES.SERVERS} (server, database) VALUES (?, ?)`,
       server.server,
       server.database,
     );
-    logger.info("Singleton server updated");
+    loggerAdapter.info("Singleton server updated");
   }
 
   async save(
@@ -35,7 +35,7 @@ class ServerRepositoryImpl {
   }
 
   async find(): Promise<IServer | null> {
-    logger.debug("Fetching singleton server");
+    loggerAdapter.debug("Fetching singleton server");
     const result = await DBCursor.getFirstAsync<IServer>(
       `SELECT server, database FROM ${DATABASE_TABLES.SERVERS} LIMIT 1`,
     );
@@ -43,9 +43,9 @@ class ServerRepositoryImpl {
   }
 
   async delete(): Promise<void> {
-    logger.debug("Deleting singleton server");
+    loggerAdapter.debug("Deleting singleton server");
     await DBCursor.mutateDatabase(`DELETE FROM ${DATABASE_TABLES.SERVERS}`);
-    logger.info("Singleton server deleted");
+    loggerAdapter.info("Singleton server deleted");
   }
 
   async remove(entity: IServer | IServer[]): Promise<void> {

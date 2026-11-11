@@ -1,5 +1,5 @@
+import type { HearingContext } from "@sincpro/client-framework";
 import type { IMigration } from "@sincpro/mobile/domain/database";
-import type { Subscriber } from "@sincpro/mobile/event_driven";
 import { DomainModule } from "@sincpro/mobile/framework/domain_module";
 import type { CronWorker } from "@sincpro/mobile/infrastructure/workers";
 import OdooCrons from "@sincpro/mobile-odoo/entrypoints/cron";
@@ -7,7 +7,7 @@ import OdooMigrations, {
   DATABASE_TABLES,
 } from "@sincpro/mobile-odoo/entrypoints/db/migrations";
 import OdooRepositoryRegistry from "@sincpro/mobile-odoo/entrypoints/db/repositories";
-import { OdooSubscribers } from "@sincpro/mobile-odoo/entrypoints/queue";
+import { odooBoundedContext } from "@sincpro/mobile-odoo/services";
 
 export class OdooModule extends DomainModule {
   readonly key = "ODOO";
@@ -22,8 +22,9 @@ export class OdooModule extends DomainModule {
     return OdooMigrations;
   }
 
-  override subscribers(): Subscriber[] {
-    return OdooSubscribers;
+  /** Its use cases — `ForgetOdooUser` is registered for `OdooLoggedOutEvent`: it hears it. */
+  override boundedContexts(): readonly HearingContext[] {
+    return [odooBoundedContext];
   }
 
   override crons(): CronWorker[] {

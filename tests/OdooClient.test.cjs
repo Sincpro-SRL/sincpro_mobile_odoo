@@ -2,6 +2,8 @@ const assert = require("node:assert/strict");
 const { mock, test } = require("node:test");
 const axios = require("axios");
 
+const framework = require("@sincpro/client-framework");
+
 const { createSourceLoader } = require("./load-source.cjs");
 
 const exceptions = createSourceLoader()(
@@ -40,17 +42,17 @@ function setup(statuses = [online]) {
   const warn = mock.fn();
   const logger = { warn, info: mock.fn(), debug: mock.fn() };
   const load = createSourceLoader({
+    "@sincpro/client-framework": { ...framework, loggerAdapter: logger },
     "@sincpro/mobile/adapters/Network.adapter": {
       NetworkAdapter: { getStatus },
     },
     "@sincpro/mobile/domain/events": {
-      InternetIsDownEvent: { name: "offline" },
-      InternetIsUpEvent: { name: "online" },
+      InternetIsDownEvent: { eventName: "offline" },
+      InternetIsUpEvent: { eventName: "online" },
     },
     "@sincpro/mobile/exceptions": exceptions,
     "@sincpro/mobile/infrastructure/logger": {
-      ...logger,
-      loggerOdooClient: logger,
+      errorAttributes: (error) => ({ error: String(error) }),
     },
     "@sincpro/mobile/infrastructure/ui/UIEventBus": { UIEventBus: { emit } },
     axios: {
@@ -65,50 +67,12 @@ function setup(statuses = [online]) {
   const client = new OdooClient();
   client.setServer({ server: "https://server.invalid", database: "test" });
   client.setUser("test", "test");
-  return { client, transport, getStatus, emit, warn };
+  return { client, transport, getStatus, emit, warn, logger };
 }
 
 function emitted(fixture, name) {
   return fixture.emit.mock.calls.filter((call) => call.arguments[0] === name)
     .length;
-}
-
-function loadEventBus(fixture) {
-  const logger = { warn: mock.fn(), info: mock.fn(), debug: mock.fn() };
-  return createSourceLoader({
-    "../../adapters/repositories/domain_event.repository": {
-      DomainEventRepository: {},
-    },
-    "../../adapters/repositories/domain_event_dead_letter.repository": {
-      DomainEventDeadLetterRepository: {},
-    },
-    "../../domain/events": {
-      InternetIsDownEvent: { name: "offline" },
-      InternetIsUpEvent: { name: "online" },
-    },
-    "../../exceptions": exceptions,
-    "../../infrastructure/event_chain": { runWithChain: mock.fn() },
-    "../../infrastructure/logger": {
-      isConsoleDebug: () => false,
-      loggerQueueProcessor: logger,
-    },
-    "../../infrastructure/ui/activity": {
-      declaresUi: mock.fn(),
-      publishActivity: mock.fn(),
-    },
-    "../../infrastructure/ui/UIEventBus": {
-      UIEventBus: { emit: fixture.emit },
-    },
-    // Since mobile 1.3.0 every subscriber runs inside the app's interceptors; with none
-    // registered it runs as is.
-    "../../infrastructure/workers/interceptors": {
-      runIntercepted: (_event, _subscriber, handler) => handler(),
-    },
-    // Since mobile 1.2.0 the EventBus pauses polling in the background through AppState;
-    // without AppState it skips that listener, which these tests do not exercise.
-    "react-native": {},
-  })("node_modules/@sincpro/mobile/dist/infrastructure/workers/EventBus.js")
-    .EventBus;
 }
 
 for (const [method, request] of Object.entries(methods)) {
@@ -130,12 +94,15 @@ for (const [method, request] of Object.entries(methods)) {
         );
         return true;
       });
-      const warnings = fixture.warn.mock.calls
-        .map((call) => call.arguments.join(" "))
-        .join(" ");
-      assert.equal(warnings.includes("timeout"), code !== "ERR_NETWORK");
+      const timedOut = fixture.warn.mock.calls.filter((call) =>
+        /timed out/.test(call.arguments[0]),
+      );
+      assert.equal(timedOut.length > 0, code !== "ERR_NETWORK");
       if (code !== "ERR_NETWORK") {
-        assert.match(warnings, method === "rpc" ? /35000ms/ : /1234ms/);
+        assert.equal(
+          timedOut[0].arguments[1].timeout_ms,
+          method === "rpc" ? 35000 : 1234,
+        );
       }
       assert.equal(emitted(fixture, "offline"), 0);
       assert.equal(fixture.transport.mock.callCount(), 1);
@@ -223,7 +190,8 @@ for (const [method, request] of Object.entries(methods)) {
     await assert.rejects(request(fixture.client), (error) => {
       if (method === "server") {
         assert.ok(error instanceof exceptions.DomainBackendError);
-        assert.match(error.message, /Service unavailable/);
+        assert.match(error.message, /503/);
+        assert.equal(framework.failureOf(error).kind, "unavailable");
       } else {
         assert.equal(error, original);
       }
@@ -240,12 +208,7 @@ for (const [method, request] of Object.entries(methods)) {
       throw original;
     });
     await assert.rejects(request(fixture.client), (error) => {
-      assert.equal(
-        method === "server"
-          ? error instanceof exceptions.DomainBackendError
-          : error === original,
-        true,
-      );
+      assert.equal(error, original);
       return true;
     });
     assert.equal(emitted(fixture, "offline"), 0);
@@ -253,7 +216,7 @@ for (const [method, request] of Object.entries(methods)) {
   });
 
   for (const code of ["ERR_NETWORK", "ECONNABORTED", "ETIMEDOUT"]) {
-    test(`${method}: EventBus retries ${code} without switching online or unknown connectivity to offline`, async () => {
+    test(`${method}: ${code} is unavailable — the stored queue retries it — and never forces offline`, async () => {
       for (const status of [
         online,
         { isConnected: true, isInternetReachable: null, type: "WIFI" },
@@ -261,55 +224,70 @@ for (const [method, request] of Object.entries(methods)) {
         new Error("Native network check failed"),
       ]) {
         const fixture = setup([status]);
-        const EventBus = loadEventBus(fixture);
         fixture.transport.mock.mockImplementation(async () => {
           throw new axios.AxiosError("Transport failed", code);
         });
-        await assert.rejects(
-          EventBus.executeSubscribers({ name: "test" }, [
-            {
-              getEvent: (event) => event,
-              process: () => request(fixture.client),
-            },
-          ]),
-          exceptions.RepeatableFailure,
-        );
-        assert.equal(EventBus.internetConnected, true);
+        await assert.rejects(request(fixture.client), (error) => {
+          const failure = framework.failureOf(error);
+          assert.equal(failure.kind, "unavailable");
+          assert.equal(failure.retryable, true);
+          assert.notEqual(failure.reason, "NETWORK_DOWN");
+          return true;
+        });
         assert.equal(emitted(fixture, "offline"), 0);
         assert.equal(fixture.transport.mock.callCount(), 1);
       }
     });
   }
 
-  test(`${method}: EventBus keeps confirmed offline failures retryable and marks connectivity offline`, async () => {
+  test(`${method}: a confirmed offline phone fails NETWORK_DOWN, retried, and the screens hear it`, async () => {
     const fixture = setup([offline]);
-    const EventBus = loadEventBus(fixture);
-    await assert.rejects(
-      EventBus.executeSubscribers({ name: "test" }, [
-        {
-          getEvent: (event) => event,
-          process: () => request(fixture.client),
-        },
-      ]),
-      exceptions.RepeatableFailure,
-    );
-    assert.equal(EventBus.internetConnected, false);
+    await assert.rejects(request(fixture.client), (error) => {
+      const failure = framework.failureOf(error);
+      assert.equal(failure.kind, "unavailable");
+      assert.equal(failure.reason, "NETWORK_DOWN");
+      return true;
+    });
     assert.ok(emitted(fixture, "offline") > 0);
     assert.equal(fixture.transport.mock.callCount(), 0);
   });
 }
 
-for (const [name, type] of [
-  ["odoo.exceptions.UserError", exceptions.DomainUserError],
-  ["odoo.exceptions.ValidationError", exceptions.DomainValidationError],
-  ["odoo.exceptions.AccessError", exceptions.DomainBackendError],
+for (const [name, code, type, kind] of [
+  ["odoo.exceptions.UserError", 200, exceptions.DomainUserError, "domain"],
+  [
+    "odoo.exceptions.ValidationError",
+    200,
+    exceptions.DomainValidationError,
+    "invalid",
+  ],
+  [
+    "odoo.exceptions.AccessDenied",
+    200,
+    exceptions.DomainBackendError,
+    "unauthenticated",
+  ],
+  [
+    "odoo.exceptions.AccessError",
+    200,
+    exceptions.DomainBackendError,
+    "permission_denied",
+  ],
+  [
+    "odoo.exceptions.MissingError",
+    200,
+    exceptions.DomainBackendError,
+    "not_found",
+  ],
+  ["builtins.KeyError", 200, exceptions.DomainBackendError, "internal"],
+  [undefined, -32601, exceptions.DomainBackendError, "not_found"],
 ]) {
-  test(`RPC preserves the API exception mapping for ${name}`, async () => {
+  test(`RPC: ${name ?? `code ${code}`} fails ${kind}`, async () => {
     const fixture = setup();
     fixture.transport.mock.mockImplementation(async () => ({
       data: {
         error: {
-          code: 1,
+          code,
           message: "API error",
           data: { name, message: "API detail" },
         },
@@ -318,11 +296,100 @@ for (const [name, type] of [
     await assert.rejects(methods.rpc(fixture.client), (error) => {
       assert.ok(error instanceof type);
       assert.equal(error.message, "API detail");
+      assert.equal(framework.failureOf(error).kind, kind);
       return true;
     });
     assert.equal(emitted(fixture, "offline"), 0);
   });
 }
+
+test("the circuit opens after five calls Odoo did not answer, and an answered error never opens it", async () => {
+  const fixture = setup();
+  fixture.transport.mock.mockImplementation(async () => {
+    throw new axios.AxiosError("Transport failed", "ERR_NETWORK");
+  });
+  for (let call = 0; call < 5; call++) {
+    await assert.rejects(
+      methods.rpc(fixture.client),
+      exceptions.RepeatableFailure,
+    );
+  }
+  await assert.rejects(methods.rpc(fixture.client), (error) => {
+    const failure = framework.failureOf(error);
+    assert.equal(failure.kind, "unavailable");
+    assert.ok(failure.retryAfter > 0, "it says how long to wait");
+    return true;
+  });
+  assert.equal(
+    fixture.transport.mock.callCount(),
+    5,
+    "an open circuit calls nobody",
+  );
+
+  const answered = setup();
+  answered.transport.mock.mockImplementation(async () => ({
+    data: {
+      error: { code: 200, message: "x", data: { name: "builtins.KeyError" } },
+    },
+  }));
+  for (let call = 0; call < 7; call++) {
+    await assert.rejects(
+      methods.rpc(answered.client),
+      exceptions.DomainBackendError,
+    );
+  }
+  assert.equal(answered.transport.mock.callCount(), 7);
+});
+
+test("no line the client writes carries the password, nor the request's arguments", async () => {
+  const fixture = setup();
+  fixture.client.setUser("ana@example.com", "s3cret-pass");
+  fixture.transport.mock.mockImplementation(async (_url, payload) =>
+    payload?.params?.method === "login"
+      ? { data: { result: 7 } }
+      : {
+          data: {
+            error: {
+              code: 200,
+              message: "x",
+              data: { name: "builtins.KeyError" },
+            },
+          },
+        },
+  );
+  await assert.rejects(fixture.client.callModel("res.partner", "read", [[1]]));
+  const lines = ["debug", "info", "warn"].flatMap((level) =>
+    fixture.logger[level].mock.calls.map((call) =>
+      JSON.stringify(call.arguments),
+    ),
+  );
+  assert.ok(lines.length > 0);
+  for (const line of lines) {
+    assert.doesNotMatch(line, /s3cret-pass/);
+    assert.doesNotMatch(line, /ana@example\.com/);
+  }
+});
+
+test("queryModel never turns an Odoo error into an empty result", async () => {
+  const fixture = setup();
+  fixture.transport.mock.mockImplementation(async (_url, payload) =>
+    payload?.params?.method === "login"
+      ? { data: { result: 7 } }
+      : {
+          data: {
+            error: {
+              code: 200,
+              message: "x",
+              data: { name: "builtins.KeyError" },
+            },
+          },
+        },
+  );
+  await assert.rejects(fixture.client.queryModel("res.partner"), (error) => {
+    assert.equal(framework.failureOf(error).kind, "internal");
+    return true;
+  });
+});
 
 test("queryModel does not silently turn authentication network failures into an empty result and can retry", async () => {
   const fixture = setup();

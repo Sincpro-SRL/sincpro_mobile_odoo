@@ -28,9 +28,28 @@ async function createServerTable(): Promise<void> {
   `);
 }
 
+/**
+ * The login events v2 left in the queue carried the password (`odoo.auth.v2.logged_in`): they
+ * keep everything else. Nothing to do on a phone whose queue was never created.
+ */
+async function removePasswordsFromStoredEvents(): Promise<void> {
+  const queue = await DBCursor.getFirstAsync<{ name: string }>(
+    "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'stored_events'",
+  );
+  if (!queue) return;
+  await DBCursor.execAsync(`
+    UPDATE stored_events SET payload = json_remove(payload, '$.password')
+    WHERE name = 'odoo.auth.v2.logged_in'
+  `);
+}
+
 const MIGRATIONS: IMigration[] = [
   { name: DATABASE_TABLES.AUTH, migrationFn: createAuthTable },
   { name: DATABASE_TABLES.SERVERS, migrationFn: createServerTable },
+  {
+    name: "odoo_events_without_password",
+    migrationFn: removePasswordsFromStoredEvents,
+  },
 ];
 
 export default MIGRATIONS;

@@ -1,7 +1,14 @@
 import { OdooSession } from "@sincpro/mobile-odoo/domain/auth";
 import { IServer } from "@sincpro/mobile-odoo/domain/server";
-import { odooAuthService } from "@sincpro/mobile-odoo/services/auth.service";
-import { serverUseCase } from "@sincpro/mobile-odoo/services/server.service";
+import {
+  CommandDeleteServer,
+  CommandLogin,
+  CommandLogout,
+  CommandRestoreSession,
+  CommandSaveServer,
+  CommandServerParams,
+  odooBoundedContext,
+} from "@sincpro/mobile-odoo/services";
 import {
   createContext,
   ReactNode,
@@ -43,7 +50,9 @@ export function OdooProvider({ children }: OdooProviderProps) {
     setAuthIsLoading(true);
     setAuthError(null);
     try {
-      const result = await odooAuthService.login(user, pass);
+      const result = await odooBoundedContext.execute(
+        new CommandLogin(user, pass),
+      );
       setSession(result);
     } catch (error) {
       setAuthError((error as Error).message);
@@ -55,7 +64,7 @@ export function OdooProvider({ children }: OdooProviderProps) {
   const logout = useCallback(async () => {
     setAuthIsLoading(true);
     try {
-      await odooAuthService.logout();
+      await odooBoundedContext.execute(new CommandLogout());
       setSession(null);
       setAuthError(null);
     } catch (error) {
@@ -69,7 +78,9 @@ export function OdooProvider({ children }: OdooProviderProps) {
     setAuthIsLoading(true);
     setAuthError(null);
     try {
-      const result = await odooAuthService.loadSession();
+      const result = await odooBoundedContext.execute(
+        new CommandRestoreSession(),
+      );
       setSession(result);
     } catch (error) {
       setAuthError((error as Error).message);
@@ -81,7 +92,9 @@ export function OdooProvider({ children }: OdooProviderProps) {
   const loadServerParams = useCallback(async () => {
     setServerIsLoading(true);
     try {
-      const server = await serverUseCase.getServerParams();
+      const server = await odooBoundedContext.execute(
+        new CommandServerParams(),
+      );
       setServerParamsState(server);
     } catch {
       setServerParamsState(null);
@@ -93,11 +106,7 @@ export function OdooProvider({ children }: OdooProviderProps) {
   const setServerParams = useCallback(async (server: IServer) => {
     setServerIsLoading(true);
     try {
-      try {
-        await serverUseCase.update(server);
-      } catch {
-        await serverUseCase.save(server);
-      }
+      await odooBoundedContext.execute(new CommandSaveServer(server));
       setServerParamsState(server);
     } finally {
       setServerIsLoading(false);
@@ -107,7 +116,7 @@ export function OdooProvider({ children }: OdooProviderProps) {
   const deleteServerParams = useCallback(async () => {
     setServerIsLoading(true);
     try {
-      await serverUseCase.delete();
+      await odooBoundedContext.execute(new CommandDeleteServer());
       setServerParamsState(null);
     } finally {
       setServerIsLoading(false);

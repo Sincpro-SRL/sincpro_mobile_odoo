@@ -1,4 +1,4 @@
-import { EApplicationLogger } from "@sincpro/mobile/infrastructure/logger";
+import type { LogLayer } from "@sincpro/client-framework";
 import { getUserInitials } from "@sincpro/mobile/tools/utils/Initials";
 import { Display } from "@sincpro/mobile-ui/Display";
 import { useToast } from "@sincpro/mobile-ui/Feedback";
@@ -13,45 +13,36 @@ import { Switch, TouchableOpacity, View } from "react-native";
 
 import { ProfileProvider, useProfile } from "./profile.context";
 
-const LOGGER_ROWS: {
-  context: EApplicationLogger;
+/** The layers of the client framework's lines, in the order a person reads them. */
+const LOG_LAYER_ROWS: {
+  layer: LogLayer;
   label: string;
   description: string;
 }[] = [
   {
-    context: EApplicationLogger.USE_CASES,
+    layer: "feature",
     label: "Casos de uso",
-    description: "Servicios y workflows",
+    description: "Features: un paso de negocio",
   },
   {
-    context: EApplicationLogger.QUEUE_PROCESSOR,
-    label: "Cola / EventBus",
-    description: "Procesamiento de eventos",
+    layer: "application_service",
+    label: "Workflows",
+    description: "ApplicationServices: varios casos de uso",
   },
   {
-    context: EApplicationLogger.CRON_JOBS,
-    label: "Crons",
-    description: "Trabajos programados",
+    layer: "bounded_context",
+    label: "Bounded contexts",
+    description: "Ejecuciones, eventos de la cola y errores manejados",
   },
   {
-    context: EApplicationLogger.ODOO_CLIENT,
-    label: "Cliente Odoo",
-    description: "HTTP y sesión Odoo (ruidoso)",
-  },
-  {
-    context: EApplicationLogger.ADAPTER,
+    layer: "adapter",
     label: "Adapters",
-    description: "Puertos de infraestructura",
+    description: "Cliente Odoo, HTTP y repositorios (ruidoso)",
   },
   {
-    context: EApplicationLogger.REPOSITORIES,
-    label: "Repositorios",
-    description: "Lectura/escritura DB",
-  },
-  {
-    context: EApplicationLogger.GLOBAL,
-    label: "Global",
-    description: "Logger sin contexto",
+    layer: "infrastructure",
+    label: "Infraestructura",
+    description: "Arranque, cola, crons y base de datos",
   },
 ];
 
@@ -61,9 +52,9 @@ function ProfileScreenContent() {
     session,
     authIsLoading,
     debugMode,
-    loggerContexts,
-    setLoggerContextEnabled,
-    resetLoggerContexts,
+    logLayers,
+    setLogLayerEnabled,
+    resetLogLayers,
     handleLogout,
     handleSettings,
     handleDatabase,
@@ -254,21 +245,21 @@ function ProfileScreenContent() {
 
         {debugMode ? (
           <FormViewV2.Content.Section title="Loggers">
-            {LOGGER_ROWS.map((row) => (
+            {LOG_LAYER_ROWS.map((row) => (
               <Display.MenuButton
                 description={row.description}
                 icon={SettingsIcon}
-                key={row.context}
+                key={row.layer}
                 label={row.label}
                 rightComponent={
                   <Switch
                     onValueChange={(enabled) => {
-                      void setLoggerContextEnabled(row.context, enabled);
+                      void setLogLayerEnabled(row.layer, enabled);
                     }}
                     style={{ transform: [{ scale: 0.85 }] }}
                     thumbColor={theme.bg.card}
                     trackColor={{ false: theme.bg.muted, true: theme.accent }}
-                    value={loggerContexts[row.context]}
+                    value={logLayers[row.layer]}
                   />
                 }
                 showDivider
@@ -279,7 +270,7 @@ function ProfileScreenContent() {
               icon={SettingsIcon}
               label="Restablecer loggers"
               onPress={() => {
-                void resetLoggerContexts();
+                void resetLogLayers();
               }}
               showDivider={false}
             />
