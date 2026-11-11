@@ -21,18 +21,8 @@ export class RestoreSession extends Feature<
 > {
   async execute(): Promise<OdooSession | null> {
     const session = await this.sessions.findById(OdooSession.UUID);
-    if (!this.odoo.isConfigured) {
-      const server = await this.servers.find();
-      if (server) this.odoo.setServer(server);
-      if (session) {
-        this.odoo.setUser(session.user, session.password);
-        this.odoo.setUserContext(
-          session.companyId,
-          session.companyIds || [],
-          session.lang || false,
-        );
-      }
-    }
+    if (!this.odoo.isConfigured) await this.configureClient(session);
+    this.span.set({ "odoo.session_kept": session !== null });
     if (!session) {
       this.logger.info("No Odoo session kept");
       return null;
@@ -40,5 +30,18 @@ export class RestoreSession extends Feature<
     await this.appSession.restoreSession();
     this.logger.info("Odoo session restored", { uid: session.uid });
     return session;
+  }
+
+  /** Points a client not configured yet at the saved server and, with a session, its user. */
+  private async configureClient(session: OdooSession | null): Promise<void> {
+    const server = await this.servers.find();
+    if (server) this.odoo.setServer(server);
+    if (!session) return;
+    this.odoo.setUser(session.user, session.password);
+    this.odoo.setUserContext(
+      session.companyId,
+      session.companyIds || [],
+      session.lang || false,
+    );
   }
 }

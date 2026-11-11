@@ -44,7 +44,7 @@ function setup(statuses = [online]) {
   const load = createSourceLoader({
     "@sincpro/client-framework": { ...framework, loggerAdapter: logger },
     "@sincpro/mobile/adapters/Network.adapter": {
-      NetworkAdapter: { getStatus },
+      networkAdapter: { getStatus },
     },
     "@sincpro/mobile/domain/events": {
       InternetIsDownEvent: { eventName: "offline" },

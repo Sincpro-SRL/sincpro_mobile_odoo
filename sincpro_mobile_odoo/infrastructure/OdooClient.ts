@@ -7,7 +7,7 @@ import {
   kindOfJsonRpcCode,
   loggerAdapter,
 } from "@sincpro/client-framework";
-import { NetworkAdapter } from "@sincpro/mobile/adapters/Network.adapter";
+import { networkAdapter } from "@sincpro/mobile/adapters/Network.adapter";
 import {
   InternetIsDownEvent,
   InternetIsUpEvent,
@@ -241,7 +241,7 @@ export class OdooClient {
   private async checkConnectivity(): Promise<void> {
     let networkStatus;
     try {
-      networkStatus = await NetworkAdapter.getStatus();
+      networkStatus = await networkAdapter.getStatus();
     } catch (error) {
       loggerAdapter.warn(
         "Could not determine Internet connectivity",

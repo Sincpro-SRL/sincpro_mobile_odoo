@@ -641,10 +641,10 @@
     tailwind-merge "^3.4.0"
     tailwind-variants "^3.2.2"
 
-"@sincpro/mobile@^2.1.0":
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/@sincpro/mobile/-/mobile-2.1.0.tgz#96b686592ece1c9ba0a8cc24c23293d46788bd73"
-  integrity sha512-NUCPVQCtmPPWd6+XUPcIE4MoVcLbgUFgg5l4YIQ/77vLWVMFE0u5jh+CZ01DaGSZdX3iUP0ML3LjR27uT/6Yhw==
+"@sincpro/mobile@^2.2.0":
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/@sincpro/mobile/-/mobile-2.2.0.tgz#67a92ba9bcb9c4239efecb7b0e98903275639dad"
+  integrity sha512-8FX1Ujic0KTAyhF6GAEvhYdn0o3OoqvqhqlqKsRgO5mZxstC3h9vOvZp023P1/JBmlceq1inLYUE1Syykhe5OA==
   dependencies:
     "@opentelemetry/api" "^1.9.1"
     "@opentelemetry/core" "^2.10.0"

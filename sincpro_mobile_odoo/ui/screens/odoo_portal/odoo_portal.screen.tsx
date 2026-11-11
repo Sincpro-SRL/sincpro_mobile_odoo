@@ -2,7 +2,7 @@ import { logger } from "@sincpro/client-framework";
 import { WebViewAdapter } from "@sincpro/mobile/adapters/webview.adapter";
 import { errorAttributes } from "@sincpro/mobile/infrastructure/logger";
 import { UIEventBus } from "@sincpro/mobile/infrastructure/ui/UIEventBus";
-import { webViewService } from "@sincpro/mobile/services/webview.service";
+import { dispatchWebViewMessage } from "@sincpro/mobile/infrastructure/webview/message_handlers";
 import {
   InjectableWebView,
   type InjectableWebViewHandle,
@@ -64,17 +64,17 @@ export function OdooPortalScreen() {
     ? serverParams.server
     : `https://${serverParams.server}`;
 
-  // The framework owns the whole print cycle (started, image, failed), so a print from the
-  // portal always shows as a process or as an error with a way to the printer screen.
+  // The page's door: each message goes to the handler of its type. The framework's print cycle
+  // turns started, image and failed into Commands of `commonBoundedContext` — each a run with its
+  // span —, so a print from the portal always shows as a process or as an error with a way to
+  // the printer screen.
   function handleWebViewMessage(event: WebViewMessageEvent) {
-    webViewService
-      .handleMessage(event.nativeEvent.data)
-      .catch((error: unknown) =>
-        logger.error(
-          "The portal's print message could not be handled",
-          errorAttributes(error),
-        ),
-      );
+    dispatchWebViewMessage(event.nativeEvent.data).catch((error: unknown) =>
+      logger.error(
+        "The portal's print message could not be handled",
+        errorAttributes(error),
+      ),
+    );
   }
 
   // The WebView tells the user when the portal does not load: here it is only logged.

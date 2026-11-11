@@ -1,5 +1,6 @@
 export {
   type IOdooSessionDTO,
+  type IUserProfileDTO,
   LoginFormValues,
   OdooSession,
   type OdooSessionID,
