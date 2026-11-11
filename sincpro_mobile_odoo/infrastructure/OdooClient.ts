@@ -1,19 +1,26 @@
+import {
+  CircuitBreaker,
+  countedByDefault,
+  type DeclaredFailure,
+  failureOf,
+  kindOfHttpStatus,
+  kindOfJsonRpcCode,
+  loggerAdapter,
+} from "@sincpro/client-framework";
 import { NetworkAdapter } from "@sincpro/mobile/adapters/Network.adapter";
 import {
   InternetIsDownEvent,
   InternetIsUpEvent,
 } from "@sincpro/mobile/domain/events";
 import {
-  BackendError,
   DomainBackendError,
+  DomainException,
   DomainNetworkError,
+  DomainUserError,
+  DomainValidationError,
   RepeatableFailure,
-  UserError,
-  ValidationError,
 } from "@sincpro/mobile/exceptions";
-import logger, {
-  loggerOdooClient,
-} from "@sincpro/mobile/infrastructure/logger";
+import { errorAttributes } from "@sincpro/mobile/infrastructure/logger";
 import { UIEventBus } from "@sincpro/mobile/infrastructure/ui/UIEventBus";
 import { IServer } from "@sincpro/mobile-odoo/domain/server";
 import axios, {
@@ -22,6 +29,77 @@ import axios, {
   isAxiosError,
   Method,
 } from "axios";
+
+type FailureKind = NonNullable<DeclaredFailure["failureKind"]>;
+
+/** Odoo's exceptions that say their kind by name; any other is read from its JSON-RPC code. */
+const KIND_OF_ODOO_EXCEPTION: Readonly<Record<string, FailureKind>> = {
+  "odoo.exceptions.AccessDenied": "unauthenticated",
+  "odoo.exceptions.AccessError": "permission_denied",
+  "odoo.exceptions.MissingError": "not_found",
+};
+
+/**
+ * An error Odoo answered over JSON-RPC that is neither a `UserError` (`domain`) nor a
+ * `ValidationError` (`invalid`): its kind is the one its exception names, else the one its
+ * JSON-RPC code stands for (`kindOfJsonRpcCode`) — an Odoo server error (`200`) is `internal`.
+ */
+export class OdooRpcError extends DomainBackendError {
+  constructor(
+    readonly code: number,
+    readonly odooException: string | undefined,
+    message: string,
+  ) {
+    super(message);
+    this.name = "OdooRpcError";
+  }
+
+  get failureKind(): FailureKind {
+    return (
+      (this.odooException && KIND_OF_ODOO_EXCEPTION[this.odooException]) ||
+      kindOfJsonRpcCode(this.code)
+    );
+  }
+}
+
+/** An HTTP request to the Odoo server that it answered with an error status: the status's kind. */
+export class OdooHttpError extends DomainBackendError {
+  constructor(
+    readonly status: number,
+    message: string,
+  ) {
+    super(message);
+    this.name = "OdooHttpError";
+  }
+
+  get failureKind(): FailureKind {
+    return kindOfHttpStatus(this.status);
+  }
+}
+
+/** Odoo did not accept the user and password: signing in again is the way on. */
+export class OdooCredentialsRejected extends DomainException {
+  static readonly failureKind = "unauthenticated";
+  constructor(message: string) {
+    super(message);
+    this.name = "OdooCredentialsRejected";
+  }
+}
+
+/**
+ * The circuit of the Odoo server, in this process's memory — the adapter's, never a Feature's:
+ * after five calls in a row it did not answer (unreachable, a timeout) it stops calling for
+ * thirty seconds, and every call fails at once with `CircuitOpen` (`unavailable`, with its wait),
+ * which the stored queue retries after that wait. An error Odoo answered over JSON-RPC is an
+ * answer and never counts, nor a refusal over HTTP (4xx); a phone with no connection is not the
+ * server failing either.
+ */
+export const odooCircuit = new CircuitBreaker("odoo", {
+  counts: (error) =>
+    countedByDefault(error) &&
+    !(error instanceof DomainNetworkError) &&
+    !(error instanceof OdooRpcError),
+});
 
 export interface IHttpRequestOptions {
   method: Method;
@@ -125,6 +203,11 @@ export class OdooClient {
     this.pass = null;
   }
 
+  /**
+   * Odoo's answer as the error it is: a `UserError` is the business refusing (`domain`), a
+   * `ValidationError` a wrong input (`invalid`), anything else an `OdooRpcError` whose kind its
+   * exception or its code says.
+   */
   private mapOdooErrorToException(error: {
     code: number;
     message: string;
@@ -134,14 +217,14 @@ export class OdooClient {
     const message = error.data?.message || error.message;
 
     if (errorType === "odoo.exceptions.UserError") {
-      return UserError(message);
+      throw new DomainUserError(message);
     }
 
     if (errorType === "odoo.exceptions.ValidationError") {
-      return ValidationError(message);
+      throw new DomainValidationError(message);
     }
 
-    return BackendError(message);
+    throw new OdooRpcError(error.code, errorType, message);
   }
 
   private createFreshAxiosInstance() {
@@ -160,9 +243,9 @@ export class OdooClient {
     try {
       networkStatus = await NetworkAdapter.getStatus();
     } catch (error) {
-      loggerOdooClient.warn(
-        "Could not determine Internet connectivity:",
-        error,
+      loggerAdapter.warn(
+        "Could not determine Internet connectivity",
+        errorAttributes(error),
       );
       return;
     }
@@ -171,15 +254,13 @@ export class OdooClient {
       networkStatus.isInternetReachable === false ||
       (networkStatus.isConnected === false && networkStatus.type !== "UNKNOWN")
     ) {
-      loggerOdooClient.warn(
-        "Network adapter confirmed no Internet connection.",
-      );
-      UIEventBus.emit(InternetIsDownEvent.name);
+      loggerAdapter.warn("Network adapter confirmed no Internet connection");
+      UIEventBus.emit(InternetIsDownEvent.eventName);
       throw new DomainNetworkError("Sin conexión a Internet");
     }
 
     if (networkStatus.isInternetReachable === true) {
-      UIEventBus.emit(InternetIsUpEvent.name);
+      UIEventBus.emit(InternetIsUpEvent.eventName);
     }
   }
 
@@ -197,11 +278,11 @@ export class OdooClient {
 
     const isTimeout =
       error.code === "ECONNABORTED" || error.code === "ETIMEDOUT";
-    loggerOdooClient.warn(
+    loggerAdapter.warn(
       isTimeout
-        ? `Request timeout after ${timeout}ms`
-        : "Server unreachable. Check the server URL, TLS or server availability.",
-      error.message,
+        ? "Odoo request timed out"
+        : "Odoo server unreachable: check the URL, TLS or its availability",
+      { timeout_ms: timeout, code: error.code ?? "" },
     );
 
     await this.checkConnectivity();
@@ -234,32 +315,23 @@ export class OdooClient {
       timeout: options.timeout || OdooClient.REQUEST_TIMEOUT_MS,
     };
 
-    try {
-      loggerOdooClient.info(
-        `HTTP ${options.method} request to: ${options.url}`,
-      );
-
-      let response: AxiosResponse<T>;
-
-      if (options.useBaseUrl && this.baseUrl) {
-        const axiosInstance = axios.create({
-          baseURL: this.baseUrl,
-          ...config,
-        });
-        response = await axiosInstance.request<T>(config);
-      } else {
-        response = await axios.request<T>(config);
+    return odooCircuit.call(async () => {
+      try {
+        loggerAdapter.debug("Odoo HTTP request", { method: options.method });
+        const response =
+          options.useBaseUrl && this.baseUrl
+            ? await axios
+                .create({ baseURL: this.baseUrl, ...config })
+                .request<T>(config)
+            : await axios.request<T>(config);
+        loggerAdapter.debug("Odoo HTTP response", { status: response.status });
+        return response;
+      } catch (error: unknown) {
+        await this.handleTransportError(error, config.timeout!);
+        loggerAdapter.warn("Odoo HTTP request failed", errorAttributes(error));
+        throw error;
       }
-
-      loggerOdooClient.info(
-        `HTTP ${options.method} response from ${options.url}: ${response.status}`,
-      );
-      return response;
-    } catch (error: any) {
-      await this.handleTransportError(error, config.timeout!);
-      loggerOdooClient.warn(`HTTP request error:`, error.message);
-      throw error;
-    }
+    });
   }
 
   async httpRequestToServer<T = any>(
@@ -288,32 +360,33 @@ export class OdooClient {
       timeout: timeout || OdooClient.REQUEST_TIMEOUT_MS,
     };
 
-    try {
-      const axiosInstance = axios.create({
-        baseURL: this.baseUrl,
-        ...config,
-      });
-
-      const normalizedPath = `${this.baseUrl?.replace(/\/$/, "") || ""}/${path.replace(/^\//, "")}`;
-      const url = path;
-      loggerOdooClient.info(`HTTP ${method} request to: ${normalizedPath}`);
-
-      const response = await axiosInstance.request<T>({
-        ...config,
-        url,
-      });
-
-      loggerOdooClient.info(
-        `HTTP ${method} response from ${normalizedPath}: ${response.status}`,
-      );
-      return response;
-    } catch (error: any) {
-      await this.handleTransportError(error, config.timeout!);
-      loggerOdooClient.warn(`HTTP request error:`, error.message);
-      throw new DomainBackendError(
-        `Error during HTTP request to server to ${path}: ${error.message}`,
-      );
-    }
+    const baseUrl = this.baseUrl;
+    return odooCircuit.call(async () => {
+      try {
+        loggerAdapter.debug("Odoo HTTP request", { method, path });
+        const response = await axios
+          .create({ baseURL: baseUrl, ...config })
+          .request<T>({ ...config, url: path });
+        loggerAdapter.debug("Odoo HTTP response", {
+          path,
+          status: response.status,
+        });
+        return response;
+      } catch (error: unknown) {
+        await this.handleTransportError(error, config.timeout!);
+        loggerAdapter.warn("Odoo HTTP request failed", {
+          path,
+          ...errorAttributes(error),
+        });
+        if (isAxiosError(error) && error.response) {
+          throw new OdooHttpError(
+            error.response.status,
+            `Odoo answered ${error.response.status} to ${path}`,
+          );
+        }
+        throw error;
+      }
+    });
   }
 
   private async jsonRpc<T>(method: string, params: JsonRpcParams): Promise<T> {
@@ -326,28 +399,28 @@ export class OdooClient {
       id: Date.now(),
     };
 
-    try {
-      const axiosInstance = this.createFreshAxiosInstance();
-      const { data } = await axiosInstance.post<JsonRpcResponse<T>>(
-        "",
-        payload,
-      );
-
-      if (data.error) {
-        logger.warn(`Request payload:`, JSON.stringify(payload, null, 2));
-        loggerOdooClient.warn(
-          `Odoo error:`,
-          data.error.message,
-          JSON.stringify(data.error, null, 2),
+    const axiosInstance = this.createFreshAxiosInstance();
+    const data = await odooCircuit.call(async () => {
+      try {
+        return (await axiosInstance.post<JsonRpcResponse<T>>("", payload)).data;
+      } catch (error: unknown) {
+        await this.handleTransportError(error, OdooClient.REQUEST_TIMEOUT_MS);
+        loggerAdapter.warn(
+          "Odoo JSON-RPC request failed",
+          errorAttributes(error),
         );
-        return this.mapOdooErrorToException(data.error);
+        throw error;
       }
-      return data.result as T;
-    } catch (error: any) {
-      await this.handleTransportError(error, OdooClient.REQUEST_TIMEOUT_MS);
-      loggerOdooClient.warn("Odoo RPC request error:", error);
-      throw error;
+    });
+    if (data.error) {
+      // Never the payload: it carries the password.
+      loggerAdapter.warn("Odoo answered an error", {
+        code: data.error.code,
+        exception: data.error.data?.name ?? "",
+      });
+      return this.mapOdooErrorToException(data.error);
     }
+    return data.result as T;
   }
 
   get urlOdoo(): string | null {
@@ -388,9 +461,10 @@ export class OdooClient {
     this.db = server.database;
     this.baseUrl = server.server;
 
-    loggerOdooClient.info(
-      `Configured Odoo server: ${url} with database: ${server.database}`,
-    );
+    loggerAdapter.info("Odoo server configured", {
+      url,
+      database: server.database,
+    });
   }
 
   setUser(user: string, pass: string): void {
@@ -415,21 +489,13 @@ export class OdooClient {
     method: M["method"],
     args: M["args"],
   ): Promise<M["result"]> {
-    loggerOdooClient.info(
-      `Calling Odoo method ${service}.${method} with args:`,
-      JSON.stringify(args, null, 2),
-    );
-    const result = await this.jsonRpc<M["result"]>("call", {
+    // Never the arguments nor the result: `login` and `execute_kw` carry the password.
+    loggerAdapter.debug("Calling Odoo", { service, method });
+    return this.jsonRpc<M["result"]>("call", {
       service,
       method,
       args,
     });
-
-    loggerOdooClient.info(
-      `Result of service ${service}.${method}:`,
-      JSON.stringify(result, null, 2),
-    );
-    return result;
   }
 
   /**
@@ -457,9 +523,7 @@ export class OdooClient {
   async authenticate(): Promise<number> {
     // Return cached uid if session is still valid
     if (this.isSessionValid()) {
-      loggerOdooClient.debug(
-        `Using cached session for user ${this.user}, uid: ${this.uid}`,
-      );
+      loggerAdapter.debug("Using the cached Odoo session", { uid: this.uid! });
       this.extendSession(); // Extend session on active use - keeps user interactive
       return this.uid!;
     }
@@ -474,11 +538,11 @@ export class OdooClient {
     // Log session renewal as info only if previous session existed, debug otherwise
     const wasSessionActive = this.uid !== null;
     if (wasSessionActive) {
-      loggerOdooClient.info(
-        `Renewing session for user ${this.user} (previous session expired)`,
-      );
+      loggerAdapter.info("Renewing the expired Odoo session", {
+        uid: this.uid!,
+      });
     } else {
-      loggerOdooClient.debug(`Creating initial session for user ${this.user}`);
+      loggerAdapter.debug("Creating the Odoo session");
     }
 
     try {
@@ -489,16 +553,14 @@ export class OdooClient {
       ]);
 
       if (!uid) {
-        throw new Error(
-          `Invalid credentials for user ${this.user} or database ${this.db}`,
+        throw new OdooCredentialsRejected(
+          `Odoo rejected the user or the password for database ${this.db}`,
         );
       }
 
       this.uid = uid;
       this.extendSession();
-      loggerOdooClient.debug(
-        `Session established for user ${this.user}, uid: ${uid}`,
-      );
+      loggerAdapter.debug("Odoo session established", { uid });
 
       return uid;
     } catch (error) {
@@ -514,7 +576,7 @@ export class OdooClient {
     this.user = null;
     this.pass = null;
 
-    loggerOdooClient.info("Cleaned user credentials and session data");
+    loggerAdapter.info("Odoo credentials and session forgotten");
   }
 
   async callModel<T>(
@@ -542,17 +604,8 @@ export class OdooClient {
       ]);
 
       return result as T;
-    } catch (error: any) {
-      // If authentication failed, silently invalidate session for next retry
-      if (
-        error.message?.includes("Invalid") ||
-        error.message?.includes("credentials")
-      ) {
-        loggerOdooClient.warn(
-          `Authentication error detected for ${model}.${method}, session invalidated silently`,
-        );
-        this.invalidateSession();
-      }
+    } catch (error: unknown) {
+      this.forgetSessionWhenRejected(error, model);
       throw error;
     }
   }
@@ -581,31 +634,26 @@ export class OdooClient {
           },
         },
       ]);
-    } catch (error: any) {
-      // If authentication failed, silently invalidate session for next retry
-      // Odoo JSON-RPC error responses include a code field; use it for reliable detection
-      const errorCode =
-        error?.code ?? error?.response?.data?.error?.code ?? error?.error?.code;
-      // Odoo authentication errors typically use code 100 (Access Denied) or 1 (generic)
-      if (errorCode === 100 || errorCode === 1) {
-        loggerOdooClient.warn(
-          `Authentication error detected for ${model} query, session invalidated silently`,
-        );
-        this.invalidateSession();
-      }
-
-      loggerOdooClient.warn(`Error querying model ${model}:`, error);
-      if (
-        error instanceof DomainNetworkError ||
-        error instanceof RepeatableFailure
-      ) {
-        throw error;
-      }
-      return {
-        length: 0,
-        records: [],
-      };
+    } catch (error: unknown) {
+      this.forgetSessionWhenRejected(error, model);
+      throw error;
     }
+  }
+
+  /**
+   * A call Odoo refused for the session (`unauthenticated`: an expired or revoked session, or
+   * the session code 100): the next call signs in again. The failure itself goes on, with its kind.
+   */
+  private forgetSessionWhenRejected(error: unknown, model: string): void {
+    const code = (error as { code?: unknown } | null)?.code;
+    if (failureOf(error).kind !== "unauthenticated" && code !== 100) return;
+    loggerAdapter.warn(
+      "Odoo refused the session: it signs in again on the next call",
+      {
+        model,
+      },
+    );
+    this.invalidateSession();
   }
 }
 

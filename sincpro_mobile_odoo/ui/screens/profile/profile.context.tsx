@@ -1,6 +1,6 @@
 import { useNavigation } from "@react-navigation/native";
+import type { LogLayer } from "@sincpro/client-framework";
 import { useCommon } from "@sincpro/mobile/entrypoints/ui/common_provider";
-import type { EApplicationLogger } from "@sincpro/mobile/infrastructure/logger";
 import { OdooScreen } from "@sincpro/mobile-odoo/entrypoints/ui/AppScreen";
 import { useOdoo } from "@sincpro/mobile-odoo/entrypoints/ui/context";
 import { useConfirmationContext } from "@sincpro/mobile-ui/Dialog/Confirmation.context";
@@ -16,12 +16,9 @@ interface IProfileContext {
   session: ReturnType<typeof useOdoo>["session"];
   authIsLoading: boolean;
   debugMode: boolean;
-  loggerContexts: Record<EApplicationLogger, boolean>;
-  setLoggerContextEnabled: (
-    context: EApplicationLogger,
-    enabled: boolean,
-  ) => Promise<void>;
-  resetLoggerContexts: () => Promise<void>;
+  logLayers: Record<LogLayer, boolean>;
+  setLogLayerEnabled: (layer: LogLayer, enabled: boolean) => Promise<void>;
+  resetLogLayers: () => Promise<void>;
   handleLogout: () => void;
   handleSettings: () => void;
   handleDatabase: () => void;
@@ -47,9 +44,9 @@ export function ProfileProvider({
   const {
     debugMode,
     toggleDebugMode,
-    loggerContexts,
-    setLoggerContextEnabled,
-    resetLoggerContexts,
+    logLayers,
+    setLogLayerEnabled,
+    resetLogLayers,
   } = useCommon();
 
   const handleLogout = useCallback(() => {
@@ -87,9 +84,9 @@ export function ProfileProvider({
       session,
       authIsLoading,
       debugMode,
-      loggerContexts,
-      setLoggerContextEnabled,
-      resetLoggerContexts,
+      logLayers,
+      setLogLayerEnabled,
+      resetLogLayers,
       handleLogout,
       handleSettings,
       handleDatabase,
@@ -101,9 +98,9 @@ export function ProfileProvider({
       session,
       authIsLoading,
       debugMode,
-      loggerContexts,
-      setLoggerContextEnabled,
-      resetLoggerContexts,
+      logLayers,
+      setLogLayerEnabled,
+      resetLogLayers,
       handleLogout,
       handleSettings,
       handleDatabase,

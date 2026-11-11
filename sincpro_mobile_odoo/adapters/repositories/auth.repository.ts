@@ -1,8 +1,8 @@
+import { loggerAdapter } from "@sincpro/client-framework";
 import { type DocumentCriteria } from "@sincpro/mobile/domain/database";
 import { EntityCollection } from "@sincpro/mobile/domain/entity";
 import { type IRepository } from "@sincpro/mobile/domain/repositories";
 import { DBCursor } from "@sincpro/mobile/infrastructure/database";
-import { loggerRepositories } from "@sincpro/mobile/infrastructure/logger";
 import { OdooSession } from "@sincpro/mobile-odoo/domain/auth";
 import { EOdooRepository } from "@sincpro/mobile-odoo/domain/repository";
 import { DATABASE_TABLES } from "@sincpro/mobile-odoo/entrypoints/db/migrations";
@@ -17,7 +17,7 @@ class AuthRepositoryImpl implements IRepository<
   async save(
     entity: OdooSession | OdooSession[] | EntityCollection<OdooSession>,
   ): Promise<void> {
-    loggerRepositories.debug("Saving Odoo session to database");
+    loggerAdapter.debug("Saving Odoo session to database");
 
     await DBCursor.mutateDatabase(`DELETE FROM ${this.table}`);
 
@@ -37,17 +37,17 @@ class AuthRepositoryImpl implements IRepository<
         session.user,
         session.db,
       );
-      loggerRepositories.info("Odoo session saved to repository", {
+      loggerAdapter.info("Odoo session saved to repository", {
         uid: session.uid,
         uuid: OdooSession.UUID,
       });
     } else {
-      loggerRepositories.warn("No session to save");
+      loggerAdapter.warn("No session to save");
     }
   }
 
   async findById(uuid: string): Promise<OdooSession | null> {
-    loggerRepositories.debug(`Finding Odoo session with UUID: ${uuid}`);
+    loggerAdapter.debug(`Finding Odoo session with UUID: ${uuid}`);
 
     const row = await DBCursor.getFirstAsync<{ uuid: string; data: string }>(
       `SELECT uuid, data FROM ${this.table} WHERE uuid = ?`,
@@ -55,11 +55,11 @@ class AuthRepositoryImpl implements IRepository<
     );
 
     if (!row) {
-      loggerRepositories.info("No Odoo session found in database");
+      loggerAdapter.info("No Odoo session found in database");
       return null;
     }
 
-    loggerRepositories.info("Odoo session loaded successfully");
+    loggerAdapter.info("Odoo session loaded successfully");
     return OdooSession.fromJSON(row.data);
   }
 
@@ -73,7 +73,7 @@ class AuthRepositoryImpl implements IRepository<
   }
 
   async findAll(): Promise<EntityCollection<OdooSession>> {
-    loggerRepositories.info("Finding all Odoo sessions");
+    loggerAdapter.info("Finding all Odoo sessions");
     const rows = await DBCursor.getAllAsync<{ uuid: string; data: string }>(
       `SELECT uuid, data FROM ${this.table}`,
     );
@@ -101,9 +101,9 @@ class AuthRepositoryImpl implements IRepository<
   }
 
   async remove(entity: OdooSession | OdooSession[]): Promise<void> {
-    loggerRepositories.info("Clearing Odoo session from database");
+    loggerAdapter.info("Clearing Odoo session from database");
     await DBCursor.mutateDatabase(`DELETE FROM ${this.table}`);
-    loggerRepositories.info("Odoo session cleared successfully");
+    loggerAdapter.info("Odoo session cleared successfully");
   }
 }
 

@@ -1,5 +1,6 @@
+import { logger } from "@sincpro/client-framework";
 import { WebViewAdapter } from "@sincpro/mobile/adapters/webview.adapter";
-import { loggerUseCases } from "@sincpro/mobile/infrastructure/logger";
+import { errorAttributes } from "@sincpro/mobile/infrastructure/logger";
 import { UIEventBus } from "@sincpro/mobile/infrastructure/ui/UIEventBus";
 import { webViewService } from "@sincpro/mobile/services/webview.service";
 import {
@@ -69,16 +70,16 @@ export function OdooPortalScreen() {
     webViewService
       .handleMessage(event.nativeEvent.data)
       .catch((error: unknown) =>
-        loggerUseCases.error(
-          "Error al procesar la impresión del portal",
-          error,
+        logger.error(
+          "The portal's print message could not be handled",
+          errorAttributes(error),
         ),
       );
   }
 
   // The WebView tells the user when the portal does not load: here it is only logged.
   function handleError(error: unknown) {
-    loggerUseCases.error("Error al cargar Odoo Portal:", error);
+    logger.error("Odoo portal did not load", errorAttributes(error));
   }
 
   return (

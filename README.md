@@ -33,11 +33,34 @@ export default createAppShell({
 
 ## API
 
-- `odooModule` / `OdooModule` — módulo de dominio (key `ODOO`, shared).
-- `getOdooClient()` — cliente HTTP Odoo (JSON-RPC).
-- `odooAuthService` — login / sesión.
+- `odooModule` / `OdooModule` — módulo de dominio (key `ODOO`, shared): su `boundedContexts()`
+  es `[odooBoundedContext]`.
+- `odooBoundedContext` — sus casos de uso, armado como el backend
+  (`infrastructure/dependencies.ts` + `infrastructure/framework.ts`):
+  - sesión: `CommandLogin`, `CommandLogout`, `CommandRestoreSession`
+    (`await odooBoundedContext.execute(new CommandLogin(user, password))`);
+  - servidor: `CommandSaveServer`, `CommandServerParams`, `CommandDeleteServer`;
+  - `CommandForgetOdooUser`: el cliente olvida al usuario. Lo ejecuta el event handler
+    `OnOdooLoggedOut` (`entrypoints/queue/`) cuando llega `OdooLoggedOutEvent`.
+- `OdooLoggedInEvent` (`odoo.auth.v3.logged_in`, sin contraseña) y `OdooLoggedOutEvent`
+  (`odoo.auth.v2.logged_out`, no espera sesión): una app los escucha registrando un caso de uso
+  para el evento (`@ticketsBoundedContext.feature([CommandX, OdooLoggedInEvent])`) o un event
+  handler (`@ticketsBoundedContext.handler([OdooLoggedInEvent])`).
+- `getOdooClient()` — cliente Odoo (JSON-RPC y HTTP). Cada error declara su tipo de falla:
+  `UserError` → `domain`, `ValidationError` → `invalid`, `AccessDenied` → `unauthenticated`,
+  `AccessError` → `permission_denied`, `MissingError` → `not_found`, otro código JSON-RPC →
+  `kindOfJsonRpcCode`, HTTP → `kindOfHttpStatus`, sin red → `unavailable` (`NETWORK_DOWN`),
+  timeout o servidor inalcanzable → `unavailable`. Un `CircuitBreaker("odoo")` (`odooCircuit`)
+  deja de llamar 30 s después de cinco llamadas seguidas sin respuesta.
 - `OdooProvider` / `useOdoo()` — contexto de Odoo para la UI.
 - `EOdooRepository` — enum de repositorios.
+
+### Credenciales
+
+La contraseña no viaja en ningún evento ni en ninguna línea de log. Sí queda guardada en el
+teléfono — en `odoo_auth` (SQLite) y en memoria del cliente — porque el cliente vuelve a
+iniciar sesión cuando la de Odoo vence (cada 50 s sin uso). Es un riesgo conocido: el stack no
+usa `expo-secure-store`, y agregarlo obliga a recompilar las apps; se decide aparte.
 
 ## Desarrollo
 
