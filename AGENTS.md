@@ -58,8 +58,9 @@ Como sincpro_framework, con @sincpro/client-framework:
   toma de la cola solo si un módulo lo declara (`consumes()`).
 - Un evento: `static eventName` con puntos (`<contexto>.<agregado>.vN.<hecho>`), `fromJSON`
   si lleva `Money`, `Decimal` o fechas, y `requiresNetwork`/`requiresSession` en su clase. Se
-  entrega al menos una vez: el efecto se identifica por `this.execution.causationId` o por la
-  entidad.
+  entrega al menos una vez: el efecto se identifica por la entidad o por el id del mensaje. Ese
+  id es `this.execution.causationId` en quien recibe el evento; un handler lo pasa en el Command
+  cuando el caso de uso lo necesita (como `OnPrintImageRequested`).
 - Un caso de uso no importa UI ni loggers: avisa por un puerto (`Notifier`), escribe con
   `this.logger` y nunca atrapa una falla para esconderla. Cada error declara su tipo
   (`failureKind`): reintentar, apartar, reportar y lo que muestra una pantalla salen de ahí.
