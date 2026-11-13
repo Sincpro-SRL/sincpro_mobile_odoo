@@ -619,20 +619,25 @@
   resolved "https://registry.yarnpkg.com/@sinclair/typebox/-/typebox-0.27.10.tgz#beefe675f1853f73676aecc915b2bd2ac98c4fc6"
   integrity sha512-MTBk/3jGLNB2tVxv6uLlFh1iu64iYOQ2PbdOSK3NW8JZsmlaOh2q6sdtKowBhfw8QFLmYNzTW4/oK4uATIi6ZA==
 
-"@sincpro/client-framework@^1.4.0":
-  version "1.4.0"
-  resolved "https://registry.yarnpkg.com/@sincpro/client-framework/-/client-framework-1.4.0.tgz#a069c990cf7f78a1095aec3bb9279e37ecf1697a"
-  integrity sha512-SOhLR0rWw1xFajKNrFZNfHnSXl8WxxLt23MkhUzF9JvZuWjSbI4G4VWPD0sy0O0GCVsmsNqCUphDUaFye5FhoQ==
+"@sincpro/client-framework@^1.11.0":
+  version "1.11.0"
+  resolved "https://registry.yarnpkg.com/@sincpro/client-framework/-/client-framework-1.11.0.tgz#b7ca6d8d6e16b3687610130c75476d55bcc6eebf"
+  integrity sha512-wWjbINt+FCcDMRxDIji47vwVNCbG/pcH95tDlRDwgE8R06reU9Oj2BaeP6UzLcp5TYqu7X/h5vIp3v90lwrkZQ==
+
+"@sincpro/criteria-react@^2.1.0":
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/@sincpro/criteria-react/-/criteria-react-2.2.0.tgz#09d7387d190b3a1a6966daf0b8924791c55a05a1"
+  integrity sha512-D+YpHoVJHB3QrEnfYa6las4DY3tX7Vd2dRFg0IDVVJ5EHoeF7VdpEaBoCXuSwmD+XtuIe5d7a2yh+bHXnF1bsQ==
 
 "@sincpro/criteria@^2.1.0":
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/@sincpro/criteria/-/criteria-2.1.0.tgz#9d1d56e78e7bb76f9e15a5a1c3c5684e254860d7"
   integrity sha512-rXOCC5MxYTZ1JYiJ++8EJFvkYpMRMZl4JQ9PNgqzYa/StsZjGJsK7mnQAqdJb2TfHuwUys8gMxj9wp4fEZN5ZQ==
 
-"@sincpro/mobile-ui@^3.4.1":
-  version "3.4.1"
-  resolved "https://registry.yarnpkg.com/@sincpro/mobile-ui/-/mobile-ui-3.4.1.tgz#58a7ef0c2e062474b1fefdf843e3e4faacf0f155"
-  integrity sha512-UqiS7wAmkluj3Fp2t+SONxj3lon6v6sZPXYdxe0UxYmXP8Qbudm/xOVl5aGDHezPKuazhkKr2AOjVJYzzWJvbg==
+"@sincpro/mobile-ui@^3.5.0":
+  version "3.5.0"
+  resolved "https://registry.yarnpkg.com/@sincpro/mobile-ui/-/mobile-ui-3.5.0.tgz#c3b907befad5617bc3f92f34ee241639525bb3f5"
+  integrity sha512-WveM488rA0wPbrN2oni6wxhrdooWq+fuC4pSA1Nkpj0TTq3GHH8DCRjuJXDt/Cj8U+67UfJGAC62YOnwfGwnLA==
   dependencies:
     "@babel/runtime" "^7.29.13"
     big.js "^7.0.1"
@@ -641,16 +646,17 @@
     tailwind-merge "^3.4.0"
     tailwind-variants "^3.2.2"
 
-"@sincpro/mobile@^2.2.0":
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/@sincpro/mobile/-/mobile-2.2.0.tgz#67a92ba9bcb9c4239efecb7b0e98903275639dad"
-  integrity sha512-8FX1Ujic0KTAyhF6GAEvhYdn0o3OoqvqhqlqKsRgO5mZxstC3h9vOvZp023P1/JBmlceq1inLYUE1Syykhe5OA==
+"@sincpro/mobile@^3.0.0":
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/@sincpro/mobile/-/mobile-3.0.0.tgz#b253d592c193cefd26df9abb126c50a25ff99261"
+  integrity sha512-xeC6PaYQ7m89C4LD9Bj8LaoZ6eJ+xt1/bIGXxvYLqdyNaoZ7XUj6i2SN6xWa7kg7v2/LsdWn8IPjiyRzBixS7Q==
   dependencies:
     "@opentelemetry/api" "^1.9.1"
     "@opentelemetry/core" "^2.10.0"
     "@opentelemetry/resources" "^2.10.0"
     "@opentelemetry/sdk-trace-base" "^2.10.0"
     "@sincpro/criteria" "^2.1.0"
+    "@sincpro/criteria-react" "^2.1.0"
     async-mutex "^0.5.0"
     big.js "^7.0.1"
     dayjs "^1.11.21"
